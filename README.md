@@ -59,6 +59,22 @@ npm run build
 npm run start
 ```
 
+## Deployment
+
+MANNAT runs on Vercel (Next.js is auto-detected). Before the first deploy:
+
+1. Add the environment variables in Vercel:
+   - `DATABASE_URL`
+   - `NEON_AUTH_BASE_URL`
+   - `NEON_AUTH_COOKIE_SECRET`
+2. Apply the schema migrations to the production database:
+
+   ```bash
+   DATABASE_URL=<production-url> node scripts/apply-schema.mjs
+   ```
+
+3. Push `main` — Vercel deploys automatically.
+
 ## Architecture
 
 ```
@@ -70,7 +86,7 @@ src/
   proxy.ts         Session refresh + route protection (Next.js 16 proxy)
   types/           Shared domain types
 neon/
-  migrations/      SQL migrations (0001–0009)
+  migrations/      SQL migrations (0001–0010)
 scripts/
   apply-schema.mjs Applies all migrations in order (idempotent)
 ```
