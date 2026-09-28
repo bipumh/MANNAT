@@ -213,3 +213,158 @@ export async function deleteTimeEntryAction(id: string): Promise<{ ok: boolean }
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+function formatCents(cents: number): string {
+  const sign = cents < 0 ? "-" : "";
+  const abs = Math.abs(cents);
+  return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
+}
+
+async function nextInvoiceNumber(workspaceId: string): Promise<string> {
+  const sql = getDb();
+  const rows = await sql`
+    insert into workspace_invoice_counters (workspace_id, next_number)
+    values (${workspaceId}, 1)
+    on conflict (workspace_id) do update
+    set next_number = workspace_invoice_counters.next_number + 1
+    returning next_number
+  `;
+  const seq = Number(rows[0]?.next_number);
+  return `INV-${String(seq).padStart(4, "0")}`;
+}
+
+/**
+ * Converts all unbilled, billable time (that has an hourly rate) on a project
+ * into a draft invoice with one line item per time entry. The database-level
+ * `unique(time_entry_id)` on `invoice_items` prevents the same entry from being
+ * invoiced twice.
+ */
+export async function createInvoiceFromTimeAction(input: {
+  projectId: string;
+}): Promise<TimeEntryFormState> {
+  const user = await getSessionUser();
+  if (!user) return { error: "You must be signed in." };
+
+  if (!input.projectId) return { error: "Select a project." };
+  if (!(await projectExistsInWorkspace(user.workspaceId, input.projectId))) {
+    return { error: "Selected project not found." };
+  }
+
+  const sql = getDb();
+
+  const projectRows = await sql`
+    select client_id
+    from projects
+    where workspace_id = ${user.workspaceId} and id = ${input.projectId}
+    limit 1
+  `;
+  const clientId = projectRows[0]?.client_id as string | undefined;
+  if (!clientId) return { error: "Selected project not found." };
+
+  const entryRows = await sql`
+    select id, description, date, duration_minutes, hourly_rate
+    from time_entries
+    where workspace_id = ${user.workspaceId}
+      and project_id = ${input.projectId}
+      and billable = true
+      and hourly_rate is not null
+      and not exists (
+        select 1 from invoice_items ii where ii.time_entry_id = time_entries.id
+      )
+    order by date asc
+  `;
+
+  if (entryRows.length === 0) {
+    return { error: "This project has no unbilled, billable time to invoice." };
+  }
+
+  const items = entryRows.map((row) => {
+    const duration = Number(row.duration_minutes);
+    const rate = Number(row.hourly_rate);
+    const rateCents = Math.round(rate * 100);
+    const amountCents = Math.round((duration * rateCents) / 60);
+    const description =
+      ((row.description as string | null)?.trim() || `Time entry · ${row.date}`) as string;
+    return {
+      timeEntryId: row.id as string,
+      description,
+      quantity: Math.round((duration / 60) * 10000) / 10000,
+      rateCents,
+      amountCents,
+    };
+  });
+
+  const subtotalCents = items.reduce((sum, item) => sum + item.amountCents, 0);
+
+  let invoiceNumber: string;
+  try {
+    invoiceNumber = await nextInvoiceNumber(user.workspaceId);
+  } catch (err) {
+    console.error("[mannat] invoice number generation failed:", err);
+    return { error: "Could not generate an invoice number. Please try again." };
+  }
+
+  let invoiceId: string;
+  try {
+    const invoiceRows = await sql`
+      insert into invoices (
+        workspace_id, client_id, project_id, invoice_number, status,
+        issue_date, subtotal, tax, total
+      )
+      values (
+        ${user.workspaceId},
+        ${clientId},
+        ${input.projectId},
+        ${invoiceNumber},
+        'draft',
+        ${todayISO()},
+        ${formatCents(subtotalCents)},
+        '0.00',
+        ${formatCents(subtotalCents)}
+      )
+      returning id
+    `;
+    invoiceId = invoiceRows[0].id as string;
+  } catch (err) {
+    console.error("[mannat] create invoice from time failed:", err);
+    return { error: "Could not create the invoice. Please try again." };
+  }
+
+  try {
+    for (const item of items) {
+      await sql`
+        insert into invoice_items (
+          workspace_id, invoice_id, time_entry_id, description, quantity, unit_rate, amount
+        )
+        values (
+          ${user.workspaceId},
+          ${invoiceId},
+          ${item.timeEntryId},
+          ${item.description},
+          ${item.quantity},
+          ${formatCents(item.rateCents)},
+          ${formatCents(item.amountCents)}
+        )
+      `;
+    }
+  } catch (err) {
+    console.error("[mannat] create invoice line items failed:", err);
+    return { error: "Could not create the invoice line items. Please try again." };
+  }
+
+  await logActivity({
+    workspaceId: user.workspaceId,
+    actorUserId: user.id,
+    eventType: "invoice.created",
+    entityType: "invoice",
+    entityId: invoiceId,
+    title: "Invoice created",
+    description: `created "${invoiceNumber}" from tracked time`,
+  });
+
+  revalidatePath("/dashboard/invoices");
+  revalidatePath(`/dashboard/invoices/${invoiceId}`);
+  revalidatePath("/dashboard/time");
+  revalidatePath("/dashboard");
+  return { success: true };
+}

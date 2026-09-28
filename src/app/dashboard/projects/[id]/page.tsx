@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getProject, listProjects } from "@/lib/projects/queries";
+import { getProjectProfitability } from "@/lib/projects/profitability";
 import { listClients } from "@/lib/clients/queries";
 import { listTasks } from "@/lib/tasks/queries";
 import { listInvoices } from "@/lib/invoices/queries";
@@ -24,11 +25,12 @@ export default async function ProjectDetailPage({
   const project = await getProject(user.workspaceId, id);
   if (!project) notFound();
 
-  const [clients, projects, tasks, invoices] = await Promise.all([
+  const [clients, projects, tasks, invoices, profitability] = await Promise.all([
     listClients(user.workspaceId),
     listProjects(user.workspaceId),
     listTasks(user.workspaceId, { projectId: id }),
     listInvoices(user.workspaceId, { projectId: id }),
+    getProjectProfitability(user.workspaceId, id),
   ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function ProjectDetailPage({
       projects={projects}
       tasks={tasks}
       invoices={invoices}
+      profitability={profitability}
     />
   );
 }

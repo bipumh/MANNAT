@@ -9,18 +9,29 @@ import {
   FileText,
   Pencil,
   Plus,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { InvoiceStatusBadge, ProjectPriorityBadge, ProjectStatusBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectDialog } from "@/components/projects/project-dialog";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
-import { formatBudget, formatDate, formatDateShort } from "@/lib/format";
+import { formatBudget, formatCurrencyPrecise, formatDate, formatDateShort, formatDuration } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Client, Invoice, Project, Task } from "@/types";
+import type { ProjectFinancialStatus, ProjectProfitability } from "@/lib/projects/profitability";
+
+const financialMeta: Record<
+  ProjectFinancialStatus,
+  { label: string; variant: "success" | "warning" | "danger" | "neutral" }
+> = {
+  "on-track": { label: "On track", variant: "success" },
+  watch: { label: "Watch", variant: "warning" },
+  "over-budget": { label: "Over budget", variant: "danger" },
+  "no-budget": { label: "No budget", variant: "neutral" },
+};
 
 export function ProjectDetail({
   project,
@@ -28,12 +39,14 @@ export function ProjectDetail({
   projects,
   tasks,
   invoices,
+  profitability,
 }: {
   project: Project;
   clients: Client[];
   projects: Project[];
   tasks: Task[];
   invoices: Invoice[];
+  profitability: ProjectProfitability | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -249,12 +262,76 @@ export function ProjectDetail({
           )}
         </Panel>
         <Panel>
-          <PanelHeader title="Team" />
-          <EmptyState
-            icon={Users}
-            title="No team members yet"
-            description="Assign teammates to this project in a future update."
+          <PanelHeader
+            title="Financials"
+            action={
+              profitability ? (
+                <Badge
+                  variant={financialMeta[profitability.status].variant}
+                  dot
+                >
+                  {financialMeta[profitability.status].label}
+                </Badge>
+              ) : null
+            }
           />
+
+          {profitability ? (
+            <dl className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Budget</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {profitability.budget
+                    ? formatCurrencyPrecise(Number(profitability.budget))
+                    : "—"}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Invoiced</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {formatCurrencyPrecise(profitability.invoicedAmount)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Paid</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {formatCurrencyPrecise(profitability.paidAmount)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Billable time</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {formatDuration(profitability.billableMinutes)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Billable value</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {formatCurrencyPrecise(profitability.billableValue)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Remaining budget</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {profitability.remainingBudget !== null
+                    ? formatCurrencyPrecise(profitability.remainingBudget)
+                    : "—"}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-muted">Task completion</dt>
+                <dd className="font-medium tabular-nums text-foreground">
+                  {profitability.totalTasks > 0
+                    ? `${Math.round(
+                        (profitability.completedTasks / profitability.totalTasks) * 100,
+                      )}%`
+                    : "0%"}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="text-sm text-dim">No financial data yet.</p>
+          )}
         </Panel>
       </div>
 

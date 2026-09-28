@@ -2,6 +2,7 @@ import "server-only";
 
 import { getDb } from "@/lib/db";
 import { getRecentActivity } from "@/lib/activity/queries";
+import { formatCurrencyPrecise, formatDuration } from "@/lib/format";
 import type {
   ActivityEvent,
   InvoiceStatus,
@@ -310,4 +311,173 @@ export async function getDashboardActivity(
   limit = 6,
 ): Promise<ActivityEvent[]> {
   return getRecentActivity(workspaceId, limit);
+}
+
+export type PulseSeverity = "danger" | "warning" | "info";
+
+export type PulseItem = {
+  id: string;
+  severity: PulseSeverity;
+  title: string;
+  message: string;
+  href: string;
+};
+
+function daysUntil(iso: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(`${iso}T00:00:00`);
+  return Math.round((due.getTime() - today.getTime()) / 86400000);
+}
+
+/**
+ * Deterministic "what needs attention" signals, derived only from real
+ * workspace data (no predictions / ML).
+ */
+export async function getBusinessPulse(
+  workspaceId: string,
+): Promise<PulseItem[]> {
+  const sql = getDb();
+
+  const [
+    overdueInvoices,
+    dueSoonInvoices,
+    overdueTasks,
+    dueSoonProjects,
+    lowCompletionProjects,
+    unbilled,
+  ] = (await Promise.all([
+    sql.query(
+      `select count(*)::int as count, coalesce(sum(total), 0)::float8 as amount
+       from invoices
+       where workspace_id = $1
+         and (status = 'overdue' or (status = 'sent' and due_date < current_date))`,
+      [workspaceId],
+    ),
+    sql.query(
+      `select count(*)::int as count
+       from invoices
+       where workspace_id = $1 and status = 'sent'
+         and due_date >= current_date
+         and due_date <= current_date + interval '7 days'`,
+      [workspaceId],
+    ),
+    sql.query(
+      `select count(*)::int as count
+       from tasks
+       where workspace_id = $1 and archived = false and status <> 'completed'
+         and due_date is not null and due_date < current_date`,
+      [workspaceId],
+    ),
+    sql.query(
+      `select id, name, due_date
+       from projects
+       where workspace_id = $1 and archived = false and status <> 'completed'
+         and due_date >= current_date
+         and due_date <= current_date + interval '7 days'
+       order by due_date asc
+       limit 3`,
+      [workspaceId],
+    ),
+    sql.query(
+      `select p.id, p.name,
+              count(t.id)::int as total,
+              count(t.id) filter (where t.status = 'completed')::int as done
+       from projects p
+       join tasks t on t.project_id = p.id and t.archived = false
+       where p.workspace_id = $1 and p.archived = false and p.status <> 'completed'
+       group by p.id, p.name
+       having count(t.id) > 0
+          and count(t.id) filter (where t.status = 'completed')::float8 / count(t.id) < 0.3
+       order by (count(t.id) filter (where t.status = 'completed')::float8 / count(t.id)) asc
+       limit 2`,
+      [workspaceId],
+    ),
+    sql.query(
+      `select coalesce(sum(duration_minutes), 0)::int as minutes
+       from time_entries
+       where workspace_id = $1 and billable = true
+         and not exists (
+           select 1 from invoice_items ii where ii.time_entry_id = time_entries.id
+         )`,
+      [workspaceId],
+    ),
+  ])) as [
+    { count: number; amount: number }[],
+    { count: number }[],
+    { count: number }[],
+    { id: string; name: string; due_date: string }[],
+    { id: string; name: string; total: number; done: number }[],
+    { minutes: number }[],
+  ];
+
+  const items: PulseItem[] = [];
+
+  const oi = overdueInvoices[0];
+  if (oi && Number(oi.count) > 0) {
+    items.push({
+      id: "overdue-invoices",
+      severity: "danger",
+      title: `${oi.count} ${Number(oi.count) === 1 ? "invoice is" : "invoices are"} overdue`,
+      message: `${formatCurrencyPrecise(Number(oi.amount))} past due`,
+      href: "/dashboard/invoices?status=overdue",
+    });
+  }
+
+  const ds = dueSoonInvoices[0];
+  if (ds && Number(ds.count) > 0) {
+    items.push({
+      id: "invoices-due-soon",
+      severity: "warning",
+      title: `${ds.count} ${Number(ds.count) === 1 ? "invoice is" : "invoices are"} due within 7 days`,
+      message: "Review upcoming billing",
+      href: "/dashboard/invoices?status=sent",
+    });
+  }
+
+  const ot = overdueTasks[0];
+  if (ot && Number(ot.count) > 0) {
+    items.push({
+      id: "overdue-tasks",
+      severity: "warning",
+      title: `${ot.count} ${Number(ot.count) === 1 ? "task is" : "tasks are"} overdue`,
+      message: "These need attention",
+      href: "/dashboard/tasks",
+    });
+  }
+
+  for (const p of dueSoonProjects) {
+    const days = daysUntil(p.due_date);
+    items.push({
+      id: `project-due-${p.id}`,
+      severity: "warning",
+      title: `${p.name} is due ${days <= 0 ? "today" : `in ${days} ${days === 1 ? "day" : "days"}`}`,
+      message: "Deadline approaching",
+      href: `/dashboard/projects/${p.id}`,
+    });
+  }
+
+  for (const p of lowCompletionProjects) {
+    const pct = Math.round((Number(p.done) / Number(p.total)) * 100);
+    items.push({
+      id: `project-progress-${p.id}`,
+      severity: "info",
+      title: `${p.name} is ${pct}% complete`,
+      message: `${p.done} of ${p.total} tasks done`,
+      href: `/dashboard/projects/${p.id}`,
+    });
+  }
+
+  const ub = unbilled[0];
+  if (ub && Number(ub.minutes) > 0) {
+    items.push({
+      id: "unbilled-time",
+      severity: "info",
+      title: `${formatDuration(Number(ub.minutes))} of billable time is ready to invoice`,
+      message: "Convert tracked time into an invoice",
+      href: "/dashboard/time",
+    });
+  }
+
+  return items;
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
-import { listTimeEntries } from "@/lib/time/queries";
+import { getUnbilledTimeSummary, listTimeEntries } from "@/lib/time/queries";
 import { listProjects } from "@/lib/projects/queries";
 import { listTasks } from "@/lib/tasks/queries";
 import { TimeView } from "@/components/time/time-view";
@@ -26,10 +26,11 @@ export default async function TimePage({
   const billable =
     sp.billable === "true" ? true : sp.billable === "false" ? false : undefined;
 
-  const [entries, projects, tasks] = await Promise.all([
+  const [entries, projects, tasks, unbilled] = await Promise.all([
     listTimeEntries(user.workspaceId, { q, projectId, taskId, billable }),
     listProjects(user.workspaceId),
     listTasks(user.workspaceId),
+    getUnbilledTimeSummary(user.workspaceId),
   ]);
 
   return (
@@ -37,6 +38,7 @@ export default async function TimePage({
       entries={entries}
       projects={projects}
       tasks={tasks}
+      unbilled={unbilled}
       query={q}
       projectId={projectId}
       taskId={taskId}

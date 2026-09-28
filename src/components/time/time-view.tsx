@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Timer } from "lucide-react";
+import { FileText, Plus, Search, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimeDialog } from "@/components/time/time-dialog";
+import { TimeInvoiceDialog } from "@/components/time/time-invoice-dialog";
 import { deleteTimeEntryAction } from "@/lib/time/actions";
 import {
   formatCurrencyPrecise,
@@ -16,6 +17,7 @@ import {
   formatDuration,
 } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import type { UnbilledProjectSummary } from "@/lib/time/queries";
 import type { Project, Task, TimeEntry } from "@/types";
 
 const billableFilters: { label: string; value?: boolean }[] = [
@@ -35,6 +37,7 @@ export function TimeView({
   entries,
   projects,
   tasks,
+  unbilled,
   query,
   projectId,
   taskId,
@@ -43,6 +46,7 @@ export function TimeView({
   entries: TimeEntry[];
   projects: Project[];
   tasks: Task[];
+  unbilled: UnbilledProjectSummary[];
   query: string;
   projectId?: string;
   taskId?: string;
@@ -54,6 +58,7 @@ export function TimeView({
     open: false,
     entry: null,
   });
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -141,10 +146,20 @@ export function TimeView({
             Log billable and non-billable hours across your projects.
           </p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus aria-hidden className="h-4 w-4" />
-          Log time
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="surface"
+            onClick={() => setInvoiceOpen(true)}
+          >
+            <FileText aria-hidden className="h-4 w-4" />
+            Invoice time
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus aria-hidden className="h-4 w-4" />
+            Log time
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -407,6 +422,18 @@ export function TimeView({
           tasks={tasks}
           onClose={() => setDialog({ open: false, entry: null })}
           onSaved={onSaved}
+        />
+      ) : null}
+
+      {invoiceOpen ? (
+        <TimeInvoiceDialog
+          summaries={unbilled}
+          onClose={() => setInvoiceOpen(false)}
+          onSaved={() => {
+            setInvoiceOpen(false);
+            setNotice("Invoice created");
+            router.refresh();
+          }}
         />
       ) : null}
     </div>

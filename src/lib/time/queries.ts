@@ -78,8 +78,8 @@ export async function listTimeEntries(
      join clients c on c.id = p.client_id
      left join tasks tk on tk.id = t.task_id
      where t.workspace_id = $1
-       and ($2::text is null or t.project_id = $2)
-       and ($3::text is null or t.task_id = $3)
+       and ($2::text is null or t.project_id = $2::uuid)
+       and ($3::text is null or t.task_id = $3::uuid)
        and ($4::boolean is null or t.billable = $4)
        and ($5::text is null
             or t.description ilike $5
@@ -116,4 +116,62 @@ export async function getTimeEntry(
   )) as TimeEntryRow[];
 
   return rows[0] ? mapTimeEntry(rows[0]) : null;
+}
+
+export type UnbilledProjectSummary = {
+  projectId: string;
+  projectName: string;
+  clientName: string | null;
+  entryCount: number;
+  totalMinutes: number;
+  totalValue: number;
+};
+
+/**
+ * Summarises unbilled, billable time (with a rate) grouped by project, so the
+ * UI can offer a "convert time → invoice" action. Excludes anything already
+ * referenced by an invoice line item.
+ */
+export async function getUnbilledTimeSummary(
+  workspaceId: string,
+): Promise<UnbilledProjectSummary[]> {
+  const sql = getDb();
+
+  const rows = (await sql.query(
+    `select
+       p.id as project_id,
+       p.name as project_name,
+       c.name as client_name,
+       count(t.id)::int as entry_count,
+       coalesce(sum(t.duration_minutes), 0)::int as total_minutes,
+       coalesce(sum(t.duration_minutes::float8 / 60 * t.hourly_rate), 0)::float8 as total_value
+     from time_entries t
+     join projects p on p.id = t.project_id
+     join clients c on c.id = p.client_id
+     where t.workspace_id = $1
+       and t.billable = true
+       and t.hourly_rate is not null
+       and not exists (
+         select 1 from invoice_items ii where ii.time_entry_id = t.id
+       )
+     group by p.id, p.name, c.name
+     order by total_value desc`,
+    [workspaceId],
+  )) as {
+    project_id: string;
+    project_name: string;
+    client_name: string | null;
+    entry_count: number;
+    total_minutes: number;
+    total_value: number;
+  }[];
+
+  return rows.map((row) => ({
+    projectId: row.project_id,
+    projectName: row.project_name,
+    clientName: row.client_name ?? null,
+    entryCount: Number(row.entry_count),
+    totalMinutes: Number(row.total_minutes),
+    totalValue: Number(row.total_value),
+  }));
 }

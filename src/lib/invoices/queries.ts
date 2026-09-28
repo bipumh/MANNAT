@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
-import type { Invoice, InvoiceStatus } from "@/types";
+import type { Invoice, InvoiceItem, InvoiceStatus } from "@/types";
 
 type InvoiceRow = {
   id: string;
@@ -78,8 +78,8 @@ export async function listInvoices(
      left join projects p on p.id = i.project_id
      where i.workspace_id = $1
        and ($2::text is null or i.status = $2)
-       and ($3::text is null or i.client_id = $3)
-       and ($4::text is null or i.project_id = $4)
+       and ($3::text is null or i.client_id = $3::uuid)
+       and ($4::text is null or i.project_id = $4::uuid)
        and ($5::text is null
             or i.invoice_number ilike $5
             or c.name ilike $5
@@ -117,4 +117,42 @@ export async function getInvoice(
   )) as InvoiceRow[];
 
   return rows[0] ? mapInvoice(rows[0]) : null;
+}
+
+type InvoiceItemRow = {
+  id: string;
+  invoice_id: string;
+  time_entry_id: string | null;
+  description: string | null;
+  quantity: string;
+  unit_rate: string;
+  amount: string;
+};
+
+/**
+ * Returns the line items for an invoice, scoped to the workspace.
+ */
+export async function getInvoiceItems(
+  workspaceId: string,
+  invoiceId: string,
+): Promise<InvoiceItem[]> {
+  const sql = getDb();
+
+  const rows = (await sql.query(
+    `select id, invoice_id, time_entry_id, description, quantity, unit_rate, amount
+     from invoice_items
+     where workspace_id = $1 and invoice_id = $2
+     order by created_at asc, id asc`,
+    [workspaceId, invoiceId],
+  )) as InvoiceItemRow[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    invoiceId: row.invoice_id,
+    timeEntryId: row.time_entry_id ?? null,
+    description: row.description ?? null,
+    quantity: row.quantity,
+    unitRate: row.unit_rate,
+    amount: row.amount,
+  }));
 }

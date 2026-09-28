@@ -100,6 +100,17 @@ export type Invoice = {
   projectName: string | null;
 };
 
+// A single invoice line item (e.g. a converted time entry).
+export type InvoiceItem = {
+  id: string;
+  invoiceId: string;
+  timeEntryId: string | null;
+  description: string | null;
+  quantity: string;
+  unitRate: string;
+  amount: string;
+};
+
 // Legacy demo task data (dashboard overview).
 export type DemoTask = {
   id: string;

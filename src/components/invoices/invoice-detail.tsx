@@ -21,8 +21,8 @@ import {
   markInvoicePaidAction,
   markInvoiceSentAction,
 } from "@/lib/invoices/actions";
-import { formatBudget, formatDate } from "@/lib/format";
-import type { Client, Invoice, InvoiceStatus, Project } from "@/types";
+import { formatBudget, formatDate, formatDuration } from "@/lib/format";
+import type { Client, Invoice, InvoiceItem, InvoiceStatus, Project } from "@/types";
 
 function effectiveStatus(invoice: Invoice): InvoiceStatus {
   if (invoice.status === "sent" && invoice.dueDate) {
@@ -37,10 +37,12 @@ export function InvoiceDetail({
   invoice,
   clients,
   projects,
+  items,
 }: {
   invoice: Invoice;
   clients: Client[];
   projects: Project[];
+  items: InvoiceItem[];
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -208,6 +210,33 @@ export function InvoiceDetail({
           </div>
         </Panel>
       </div>
+
+      {items.length > 0 ? (
+        <Panel>
+          <PanelHeader title="Line items" />
+          <ul className="divide-y divide-line">
+            {items.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {item.description}
+                  </p>
+                  <p className="text-xs text-dim">
+                    {formatDuration(Math.round(Number(item.quantity) * 60))} ×{" "}
+                    {formatBudget(item.unitRate)}/hr
+                  </p>
+                </div>
+                <span className="shrink-0 text-sm font-medium tabular-nums text-foreground">
+                  {formatBudget(item.amount)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
 
       {invoice.notes ? (
         <Panel>

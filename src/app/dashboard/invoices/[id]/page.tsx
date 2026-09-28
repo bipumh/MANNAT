@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
-import { getInvoice } from "@/lib/invoices/queries";
+import { getInvoice, getInvoiceItems } from "@/lib/invoices/queries";
 import { listClients } from "@/lib/clients/queries";
 import { listProjects } from "@/lib/projects/queries";
 import { InvoiceDetail } from "@/components/invoices/invoice-detail";
@@ -23,12 +23,18 @@ export default async function InvoiceDetailPage({
   const invoice = await getInvoice(user.workspaceId, id);
   if (!invoice) notFound();
 
-  const [clients, projects] = await Promise.all([
+  const [clients, projects, items] = await Promise.all([
     listClients(user.workspaceId),
     listProjects(user.workspaceId),
+    getInvoiceItems(user.workspaceId, id),
   ]);
 
   return (
-    <InvoiceDetail invoice={invoice} clients={clients} projects={projects} />
+    <InvoiceDetail
+      invoice={invoice}
+      clients={clients}
+      projects={projects}
+      items={items}
+    />
   );
 }

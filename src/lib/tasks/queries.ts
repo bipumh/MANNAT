@@ -74,7 +74,7 @@ export async function listTasks(
        and t.archived = false
        and ($2::text is null or t.status = $2)
        and ($3::text is null or t.priority = $3)
-       and ($4::text is null or t.project_id = $4)
+       and ($4::text is null or t.project_id = $4::uuid)
        and ($5::text is null
             or t.title ilike $5
             or t.description ilike $5

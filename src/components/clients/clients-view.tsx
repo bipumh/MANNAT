@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { ArrowUpRight, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -97,10 +97,19 @@ export function ClientsView({
             Manage your client relationships and keep everything connected.
           </p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus aria-hidden className="h-4 w-4" />
-          New client
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/clients/health"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
+          >
+            Client health
+            <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+          </Link>
+          <Button size="sm" onClick={openCreate}>
+            <Plus aria-hidden className="h-4 w-4" />
+            New client
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

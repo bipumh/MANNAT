@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BarChart3, Download, Plus } from "lucide-react";
 import { getSessionUser } from "@/lib/auth/session";
 import {
+  getBusinessPulse,
   getDashboardActivity,
   getDashboardInvoices,
   getDashboardOverview,
@@ -15,6 +16,7 @@ import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DashboardReveal } from "@/components/dashboard/dashboard-reveal";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
+import { BusinessPulse } from "@/components/dashboard/business-pulse";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { RecentProjects } from "@/components/dashboard/recent-projects";
 import { RecentInvoices } from "@/components/dashboard/recent-invoices";
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
 
   const [
     overview,
+    pulse,
     revenueData,
     projects,
     tasks,
@@ -41,6 +44,7 @@ export default async function DashboardPage() {
     activityEvents,
   ] = await Promise.all([
     getDashboardOverview(user.workspaceId),
+    getBusinessPulse(user.workspaceId),
     getDashboardRevenue(user.workspaceId),
     getDashboardProjects(user.workspaceId, 5),
     getDashboardTasks(user.workspaceId, 5),
@@ -77,6 +81,10 @@ export default async function DashboardPage() {
 
       <DashboardReveal delay={0.05}>
         <OverviewCards overview={overview} />
+      </DashboardReveal>
+
+      <DashboardReveal delay={0.08}>
+        <BusinessPulse items={pulse} />
       </DashboardReveal>
 
       <DashboardReveal delay={0.1}>
