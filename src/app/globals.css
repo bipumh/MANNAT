@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography — a precise grotesque display paired with a clean, modern sans. */
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Palette — deep, near-black greens with a restrained emerald accent. */
+  --color-background: #0b0f0d;
+  --color-background-alt: #0e1310;
+  --color-surface: #151b18;
+  --color-surface-2: #1a211d;
+  --color-surface-3: #1f2823;
+  --color-elevated: #1c2420;
+  --color-line: #26332d;
+  --color-line-strong: #33413a;
+
+  --color-foreground: #f3f7f5;
+  --color-muted: #9ba8a2;
+  --color-dim: #7a8780;
+  --color-faint: #56615b;
+
+  /* Accent — emerald, used sparingly for emphasis and positive signals. */
+  --color-primary: #2dd4a8;
+  --color-primary-bright: #6ee7b7;
+  --color-primary-dark: #1faf8b;
+  --color-primary-soft: rgb(45 212 168 / 0.12);
+
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --shadow-soft: 0 20px 40px -28px rgb(0 0 0 / 0.55);
+  --shadow-lift: 0 32px 64px -32px rgb(0 0 0 / 0.65);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Focus visibility — a clear, warm emerald ring. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: #05251c;
+}
+
+/* Animated underline for inline links. */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.35s ease;
+}
+
+.link-underline:hover {
+  background-size: 100% 1px;
+}
+
+/* Subtle engineering grid — used behind the hero and product preview. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(51 65 58 / 0.32) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(51 65 58 / 0.32) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 35%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 35%, transparent 78%);
+}
+
+/* Soft emerald glow for hero emphasis — kept very restrained. */
+.bg-glow {
+  background-image: radial-gradient(
+    60% 50% at 50% 0%,
+    rgb(45 212 168 / 0.09) 0%,
+    transparent 70%
+  );
+}
+
+/* Refined scrollbar for a considered desktop feel. */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-background);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 9999px;
+    border: 3px solid var(--color-background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3f4f46;
+  }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
