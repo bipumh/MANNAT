@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_EMERALD } from "@/components/dashboard/spotlight";
 import {
   ProjectPriorityBadge,
   ProjectStatusBadge,
@@ -17,7 +18,7 @@ export function RecentProjects({
   className?: string;
 }) {
   return (
-    <Panel className={className}>
+    <Panel spotlight spotlightColor={SPOTLIGHT_EMERALD} className={className}>
       <PanelHeader
         title="Recent projects"
         action={
@@ -46,34 +47,46 @@ export function RecentProjects({
             return (
               <li
                 key={project.id}
-                className="-mx-2 rounded-lg px-2 py-3.5 transition-colors first:pt-0 last:pb-0 hover:bg-surface-2/50"
+                className="py-3.5 transition-colors first:pt-0 last:pb-0"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {project.name}
-                    </p>
-                    <p className="mt-0.5 text-xs text-dim">
-                      {project.clientName ?? "No client"}
-                      {project.dueDate
-                        ? ` · Due ${formatDateShort(project.dueDate)}`
-                        : ""}
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-surface-3 text-xs font-semibold uppercase text-muted">
+                      {project.name.charAt(0)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {project.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-dim">
+                        {project.clientName ?? "No client"}
+                        {project.dueDate
+                          ? ` · Due ${formatDateShort(project.dueDate)}`
+                          : ""}
+                      </p>
+                    </div>
                   </div>
                   <ProjectStatusBadge status={project.status} />
                 </div>
 
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: `${progress}%` }}
-                    />
+                <div className="mt-3 pl-12">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-xs text-dim">
+                      {project.completedTasks} of {project.totalTasks} tasks
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums text-foreground">
+                      {progress}%
+                    </span>
                   </div>
-                  <span className="w-9 text-right text-xs tabular-nums text-muted">
-                    {progress}%
-                  </span>
-                  <ProjectPriorityBadge priority={project.priority} />
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-line">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-primary-bright"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <ProjectPriorityBadge priority={project.priority} />
+                  </div>
                 </div>
               </li>
             );

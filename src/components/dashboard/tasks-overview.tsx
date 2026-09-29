@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, CheckSquare } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { TaskPriorityBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardTask } from "@/lib/dashboard/queries";
@@ -16,7 +17,7 @@ export function TasksOverview({
   className?: string;
 }) {
   return (
-    <Panel className={className}>
+    <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL} className={className}>
       <PanelHeader
         title="Tasks"
         description={

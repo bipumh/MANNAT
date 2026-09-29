@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardInvoice, InvoiceCounts } from "@/lib/dashboard/queries";
@@ -25,7 +26,7 @@ export function RecentInvoices({
   ];
 
   return (
-    <Panel className={className}>
+    <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL} className={className}>
       <PanelHeader
         title="Recent invoices"
         description={`${formatCurrencyPrecise(outstanding)} outstanding`}

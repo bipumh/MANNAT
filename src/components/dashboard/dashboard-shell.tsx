@@ -57,14 +57,22 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 45% at 50% -10%, rgba(45,212,168,0.12), transparent 62%), radial-gradient(ellipse 45% 35% at 100% 0%, rgba(30,64,52,0.5), transparent 55%), radial-gradient(ellipse 40% 30% at 0% 100%, rgba(20,44,35,0.4), transparent 55%)",
+          }}
+        />
         <Topbar
           user={user}
           onMenuClick={() => setSidebarOpen(true)}
           notifications={notifications}
           unreadCount={unreadCount}
         />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="relative flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

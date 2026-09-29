@@ -12,7 +12,9 @@ import {
   getDashboardTasks,
 } from "@/lib/dashboard/queries";
 import { Button } from "@/components/ui/button";
+import { formatCurrencyPrecise } from "@/lib/format";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_EMERALD } from "@/components/dashboard/spotlight";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DashboardReveal } from "@/components/dashboard/dashboard-reveal";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
@@ -57,24 +59,33 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <DashboardReveal>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-              Good morning, {firstName}
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Here&apos;s what&apos;s happening at {user.workspaceName} today.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="surface" size="sm">
-              <Download aria-hidden className="h-4 w-4" />
-              Export
-            </Button>
-            <Button size="sm">
-              <Plus aria-hidden className="h-4 w-4" />
-              New project
-            </Button>
+        <div className="relative">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+          />
+          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                Workspace overview
+              </p>
+              <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Good morning, {firstName}
+              </h1>
+              <p className="mt-2 max-w-lg text-sm text-muted">
+                Here&apos;s what&apos;s happening at {user.workspaceName} today.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="surface" size="sm">
+                <Download aria-hidden className="h-4 w-4" />
+                Export
+              </Button>
+              <Button size="sm">
+                <Plus aria-hidden className="h-4 w-4" />
+                New project
+              </Button>
+            </div>
           </div>
         </div>
       </DashboardReveal>
@@ -89,28 +100,46 @@ export default async function DashboardPage() {
 
       <DashboardReveal delay={0.1}>
         <div className="grid gap-6 lg:grid-cols-3">
-          <Panel className="lg:col-span-2">
-            <PanelHeader
-              title="Revenue"
-              description="Monthly paid revenue"
-              action={
-                <div className="flex items-center gap-4 text-xs text-dim">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-sm bg-primary" />
-                    Revenue
-                  </span>
-                </div>
-              }
+          <Panel
+            spotlight
+            spotlightColor={SPOTLIGHT_EMERALD}
+            className="relative overflow-hidden lg:col-span-2"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/15 blur-3xl"
             />
-            {hasRevenue ? (
-              <RevenueChart data={revenueData} className="w-full" />
-            ) : (
-              <EmptyState
-                icon={BarChart3}
-                title="No paid revenue yet"
-                description="Your revenue trend will appear here once invoices are paid."
+            <div className="relative">
+              <PanelHeader
+                title="Revenue"
+                description="Monthly paid revenue"
+                action={
+                  <div className="flex items-center gap-4 text-xs text-dim">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-sm bg-primary" />
+                      Revenue
+                    </span>
+                  </div>
+                }
               />
-            )}
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-display text-3xl font-semibold tracking-tight text-foreground">
+                  {formatCurrencyPrecise(overview.totalRevenue)}
+                </span>
+                <span className="text-xs text-dim">total paid revenue</span>
+              </div>
+              <div className="mt-4">
+                {hasRevenue ? (
+                  <RevenueChart data={revenueData} className="w-full" />
+                ) : (
+                  <EmptyState
+                    icon={BarChart3}
+                    title="No paid revenue yet"
+                    description="Your revenue trend will appear here once invoices are paid."
+                  />
+                )}
+              </div>
+            </div>
           </Panel>
           <ActivityFeed events={activityEvents} />
         </div>
