@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { TaskPriorityBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import {
@@ -67,50 +68,56 @@ export function TaskDetail({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link
-            href="/dashboard/tasks"
-            className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Tasks
-          </Link>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h2
-              className={
-                isCompleted
-                  ? "font-display text-2xl font-semibold tracking-tight text-dim line-through"
-                  : "font-display text-2xl font-semibold tracking-tight text-foreground"
-              }
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <Link
+              href="/dashboard/tasks"
+              className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
             >
-              {task.title}
-            </h2>
-            <TaskStatusBadge status={task.status} />
-            <TaskPriorityBadge priority={task.priority} />
+              <ArrowLeft aria-hidden className="h-4 w-4" />
+              Tasks
+            </Link>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <h1
+                className={
+                  isCompleted
+                    ? "font-display text-3xl font-semibold tracking-tight text-dim line-through sm:text-4xl"
+                    : "font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+                }
+              >
+                {task.title}
+              </h1>
+              <TaskStatusBadge status={task.status} />
+              <TaskPriorityBadge priority={task.priority} />
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button size="sm" onClick={toggleComplete} disabled={busy}>
-            {isCompleted ? (
-              <RotateCcw aria-hidden className="h-4 w-4" />
-            ) : (
-              <Check aria-hidden className="h-4 w-4" />
-            )}
-            {isCompleted ? "Reopen" : "Complete"}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={archive} disabled={busy}>
-            <Trash2 aria-hidden className="h-4 w-4" />
-            Archive
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button size="sm" onClick={toggleComplete} disabled={busy}>
+              {isCompleted ? (
+                <RotateCcw aria-hidden className="h-4 w-4" />
+              ) : (
+                <Check aria-hidden className="h-4 w-4" />
+              )}
+              {isCompleted ? "Reopen" : "Complete"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={archive} disabled={busy}>
+              <Trash2 aria-hidden className="h-4 w-4" />
+              Archive
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Panel>
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader title="Details" />
         {task.description ? (
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">

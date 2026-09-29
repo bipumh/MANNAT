@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { TaskPriorityBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TaskDialog } from "@/components/tasks/task-dialog";
@@ -150,20 +152,29 @@ export function TasksView({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Tasks
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Track the work behind your projects, one task at a time.
-          </p>
+    <div className="space-y-6">
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Tasks
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Tasks
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-muted">
+              Track the work behind your projects, one task at a time.
+            </p>
+          </div>
+          <Button size="sm" onClick={openCreate}>
+            <Plus aria-hidden className="h-4 w-4" />
+            New task
+          </Button>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus aria-hidden className="h-4 w-4" />
-          New task
-        </Button>
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -277,7 +288,11 @@ export function TasksView({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-line bg-surface md:block">
+          <Panel
+            spotlight
+            spotlightColor={SPOTLIGHT_NEUTRAL}
+            className="hidden overflow-hidden p-0 md:block"
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs font-medium text-dim">
@@ -297,9 +312,9 @@ export function TasksView({
                   return (
                     <tr
                       key={task.id}
-                      className="group transition-colors hover:bg-surface-2/50"
+                      className="group transition-colors hover:bg-surface-2/40"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <button
                           type="button"
                           onClick={() => toggleComplete(task)}
@@ -321,7 +336,7 @@ export function TasksView({
                           ) : null}
                         </button>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <Link
                           href={`/dashboard/tasks/${task.id}`}
                           className="block"
@@ -338,16 +353,16 @@ export function TasksView({
                           <p className="text-xs text-dim">{task.projectName}</p>
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <TaskPriorityBadge priority={task.priority} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <TaskStatusBadge status={task.status} />
                       </td>
-                      <td className={cn("px-4 py-3 text-sm", due?.className)}>
+                      <td className={cn("px-4 py-3.5 text-sm", due?.className)}>
                         {due?.label ?? "—"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                           <Button
                             variant="ghost"
@@ -371,16 +386,18 @@ export function TasksView({
                 })}
               </tbody>
             </table>
-          </div>
+          </Panel>
 
           {/* Mobile cards */}
-          <ul className="space-y-3 md:hidden">
+          <div className="space-y-3 md:hidden">
             {tasks.map((task) => {
               const due = dueMeta(task.dueDate, task.status);
               return (
-                <li
+                <Panel
                   key={task.id}
-                  className="rounded-xl border border-line bg-surface p-4"
+                  spotlight
+                  spotlightColor={SPOTLIGHT_NEUTRAL}
+                  className="p-4"
                 >
                   <div className="flex items-start gap-3">
                     <button
@@ -447,10 +464,10 @@ export function TasksView({
                       Archive
                     </Button>
                   </div>
-                </li>
+                </Panel>
               );
             })}
-          </ul>
+          </div>
         </>
       )}
 
