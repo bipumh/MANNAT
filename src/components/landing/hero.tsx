@@ -9,11 +9,11 @@ const trustedBy = ["Northwind", "Lumen & Co.", "Kite Health", "Ferrum", "Aster"]
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden">
       <LiquidSurface className="absolute inset-0 h-full w-full" />
       <div aria-hidden className="absolute inset-0 bg-glow" />
 
-      <Container className="relative pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pt-32 lg:pb-28">
+      <Container className="relative pt-8 pb-10 sm:pt-10 sm:pb-12 lg:pt-14 lg:pb-14">
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-muted">
