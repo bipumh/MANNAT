@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { RoleBadge } from "@/components/dashboard/status";
 import { MemberDialog } from "@/components/team/member-dialog";
 import {
@@ -94,23 +95,32 @@ export function TeamView({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Team
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            {members.length}{" "}
-            {members.length === 1 ? "member" : "members"} in your workspace.
-          </p>
+    <div className="space-y-6">
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Team
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Team
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-muted">
+              {members.length}{" "}
+              {members.length === 1 ? "member" : "members"} in your workspace.
+            </p>
+          </div>
+          {canManage ? (
+            <Button size="sm" onClick={() => setInviting(true)}>
+              <UserPlus aria-hidden className="h-4 w-4" />
+              Invite member
+            </Button>
+          ) : null}
         </div>
-        {canManage ? (
-          <Button size="sm" onClick={() => setInviting(true)}>
-            <UserPlus aria-hidden className="h-4 w-4" />
-            Invite member
-          </Button>
-        ) : null}
       </div>
 
       {notice ? (
@@ -119,11 +129,11 @@ export function TeamView({
         </p>
       ) : null}
 
-      <Panel>
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader title="Members" />
 
         {/* Desktop table */}
-        <div className="hidden overflow-hidden rounded-xl border border-line bg-surface-2/40 md:block">
+        <div className="hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs font-medium text-dim">
@@ -218,7 +228,7 @@ export function TeamView({
             return (
               <li
                 key={member.id}
-                className="rounded-xl border border-line bg-surface-2/40 p-4"
+                className="rounded-lg bg-surface-2/40 p-4"
               >
                 <div className="flex items-start gap-3">
                   <Avatar initials={initials(member.fullName)} className="h-9 w-9 text-xs" />
@@ -282,7 +292,7 @@ export function TeamView({
       </Panel>
 
       {canManage ? (
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader
             title="Pending invitations"
             description="Share the invite link with your teammates. No email is sent in this phase."
