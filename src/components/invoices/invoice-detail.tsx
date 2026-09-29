@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge } from "@/components/dashboard/status";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
 import {
@@ -67,79 +68,85 @@ export function InvoiceDetail({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link
-            href="/dashboard/invoices"
-            className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Invoices
-          </Link>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h2 className="font-display text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-              {invoice.invoiceNumber}
-            </h2>
-            <InvoiceStatusBadge status={status} />
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Link
+              href="/dashboard/invoices"
+              className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
+            >
+              <ArrowLeft aria-hidden className="h-4 w-4" />
+              Invoices
+            </Link>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl font-semibold tabular-nums tracking-tight text-foreground sm:text-4xl">
+                {invoice.invoiceNumber}
+              </h1>
+              <InvoiceStatusBadge status={status} />
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden className="h-4 w-4" />
-            Edit
-          </Button>
-          {invoice.status === "draft" ? (
-            <Button
-              size="sm"
-              onClick={() => run(markInvoiceSentAction)}
-              disabled={busy}
-            >
-              <Send aria-hidden className="h-4 w-4" />
-              Mark as sent
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="h-4 w-4" />
+              Edit
             </Button>
-          ) : null}
-          {invoice.status === "sent" || invoice.status === "overdue" ? (
-            <Button
-              size="sm"
-              onClick={() => run(markInvoicePaidAction)}
-              disabled={busy}
-            >
-              <Check aria-hidden className="h-4 w-4" />
-              Mark as paid
-            </Button>
-          ) : null}
-          {invoice.status === "sent" ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => run(markInvoiceOverdueAction)}
-              disabled={busy}
-            >
-              <Clock aria-hidden className="h-4 w-4" />
-              Mark overdue
-            </Button>
-          ) : null}
-          {invoice.status !== "cancelled" ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                if (window.confirm(`Cancel invoice ${invoice.invoiceNumber}?`)) {
-                  run(cancelInvoiceAction);
-                }
-              }}
-              disabled={busy}
-            >
-              <Trash2 aria-hidden className="h-4 w-4" />
-              Cancel
-            </Button>
-          ) : null}
+            {invoice.status === "draft" ? (
+              <Button
+                size="sm"
+                onClick={() => run(markInvoiceSentAction)}
+                disabled={busy}
+              >
+                <Send aria-hidden className="h-4 w-4" />
+                Mark as sent
+              </Button>
+            ) : null}
+            {invoice.status === "sent" || invoice.status === "overdue" ? (
+              <Button
+                size="sm"
+                onClick={() => run(markInvoicePaidAction)}
+                disabled={busy}
+              >
+                <Check aria-hidden className="h-4 w-4" />
+                Mark as paid
+              </Button>
+            ) : null}
+            {invoice.status === "sent" ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => run(markInvoiceOverdueAction)}
+                disabled={busy}
+              >
+                <Clock aria-hidden className="h-4 w-4" />
+                Mark overdue
+              </Button>
+            ) : null}
+            {invoice.status !== "cancelled" ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  if (window.confirm(`Cancel invoice ${invoice.invoiceNumber}?`)) {
+                    run(cancelInvoiceAction);
+                  }
+                }}
+                disabled={busy}
+              >
+                <Trash2 aria-hidden className="h-4 w-4" />
+                Cancel
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Client" />
           <Link
             href={`/dashboard/clients/${invoice.clientId}`}
@@ -168,7 +175,7 @@ export function InvoiceDetail({
           ) : null}
         </Panel>
 
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Dates" />
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
@@ -192,7 +199,7 @@ export function InvoiceDetail({
           </div>
         </Panel>
 
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Summary" />
           <div className="space-y-2 text-sm">
             {totals.map((row) => (
@@ -212,7 +219,7 @@ export function InvoiceDetail({
       </div>
 
       {items.length > 0 ? (
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Line items" />
           <ul className="divide-y divide-line">
             {items.map((item) => (
@@ -239,7 +246,7 @@ export function InvoiceDetail({
       ) : null}
 
       {invoice.notes ? (
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Notes" />
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
             {invoice.notes}
