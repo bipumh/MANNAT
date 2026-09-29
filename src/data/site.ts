@@ -89,10 +89,10 @@ export const pricingPlans: PricingPlan[] = [
     description: "For freelancers getting organised.",
     cta: "Start free",
     features: [
-      "Up to 3 active projects",
+      "Unlimited projects",
       "Unlimited tasks",
       "Basic invoicing",
-      "1 team seat",
+      "Time tracking",
     ],
   },
   {
@@ -105,9 +105,9 @@ export const pricingPlans: PricingPlan[] = [
     highlighted: true,
     features: [
       "Unlimited projects",
-      "Kanban & timelines",
-      "Recurring invoices",
-      "Up to 10 team seats",
+      "Task tracking",
+      "Invoice from tracked time",
+      "Team roles & permissions",
       "Analytics dashboard",
     ],
   },
@@ -121,7 +121,7 @@ export const pricingPlans: PricingPlan[] = [
     features: [
       "Everything in Growth",
       "Role-based permissions",
-      "API & webhooks",
+      "Activity & notifications",
       "Priority support",
     ],
   },
