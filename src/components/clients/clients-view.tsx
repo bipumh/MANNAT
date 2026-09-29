@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import { Panel } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { ClientStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientDialog } from "@/components/clients/client-dialog";
@@ -18,6 +21,13 @@ const filters: { label: string; value?: ClientStatus }[] = [
   { label: "Active", value: "active" },
   { label: "Inactive", value: "inactive" },
 ];
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 export function ClientsView({
   clients,
@@ -87,28 +97,37 @@ export function ClientsView({
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Clients
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Manage your client relationships and keep everything connected.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/clients/health"
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
-          >
-            Client health
-            <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
-          </Link>
-          <Button size="sm" onClick={openCreate}>
-            <Plus aria-hidden className="h-4 w-4" />
-            New client
-          </Button>
+    <div className="space-y-6">
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Directory
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Clients
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-muted">
+              Manage your client relationships and keep everything connected.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/clients/health"
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
+            >
+              Client health
+              <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+            </Link>
+            <Button size="sm" onClick={openCreate}>
+              <Plus aria-hidden className="h-4 w-4" />
+              New client
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -176,7 +195,11 @@ export function ClientsView({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-line bg-surface md:block">
+          <Panel
+            spotlight
+            spotlightColor={SPOTLIGHT_NEUTRAL}
+            className="hidden overflow-hidden p-0 md:block"
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs font-medium text-dim">
@@ -192,34 +215,42 @@ export function ClientsView({
                 {clients.map((client) => (
                   <tr
                     key={client.id}
-                    className="group transition-colors hover:bg-surface-2/50"
+                    className="group transition-colors hover:bg-surface-2/40"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <Link
                         href={`/dashboard/clients/${client.id}`}
-                        className="block"
+                        className="flex items-center gap-3"
                       >
-                        <p className="font-medium text-foreground transition-colors group-hover:text-primary-bright">
-                          {client.name}
-                        </p>
-                        {client.company ? (
-                          <p className="text-xs text-dim">{client.company}</p>
-                        ) : null}
+                        <Avatar
+                          initials={initials(client.name)}
+                          className="h-9 w-9 text-xs"
+                        />
+                        <span className="min-w-0">
+                          <p className="truncate font-medium text-foreground transition-colors group-hover:text-primary-bright">
+                            {client.name}
+                          </p>
+                          {client.company ? (
+                            <p className="truncate text-xs text-dim">
+                              {client.company}
+                            </p>
+                          ) : null}
+                        </span>
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="px-4 py-3.5 text-muted">
                       {client.email ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="px-4 py-3.5 text-muted">
                       {client.phone ?? "—"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <ClientStatusBadge status={client.status} />
                     </td>
-                    <td className="px-4 py-3 text-muted">
+                    <td className="px-4 py-3.5 text-muted">
                       {formatDate(client.createdAt)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                         <Button
                           variant="ghost"
@@ -242,33 +273,41 @@ export function ClientsView({
                 ))}
               </tbody>
             </table>
-          </div>
+          </Panel>
 
           {/* Mobile cards */}
-          <ul className="space-y-3 md:hidden">
+          <div className="space-y-3 md:hidden">
             {clients.map((client) => (
-              <li
+              <Panel
                 key={client.id}
-                className="rounded-xl border border-line bg-surface p-4"
+                spotlight
+                spotlightColor={SPOTLIGHT_NEUTRAL}
+                className="p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <Link
                     href={`/dashboard/clients/${client.id}`}
-                    className="min-w-0"
+                    className="flex min-w-0 items-center gap-3"
                   >
-                    <p className="truncate font-medium text-foreground">
-                      {client.name}
-                    </p>
-                    {client.company ? (
-                      <p className="truncate text-xs text-dim">
-                        {client.company}
+                    <Avatar
+                      initials={initials(client.name)}
+                      className="h-10 w-10 text-xs"
+                    />
+                    <span className="min-w-0">
+                      <p className="truncate font-medium text-foreground">
+                        {client.name}
                       </p>
-                    ) : null}
-                    {client.email ? (
-                      <p className="mt-1 truncate text-xs text-muted">
-                        {client.email}
-                      </p>
-                    ) : null}
+                      {client.company ? (
+                        <p className="truncate text-xs text-dim">
+                          {client.company}
+                        </p>
+                      ) : null}
+                      {client.email ? (
+                        <p className="mt-0.5 truncate text-xs text-muted">
+                          {client.email}
+                        </p>
+                      ) : null}
+                    </span>
                   </Link>
                   <ClientStatusBadge status={client.status} />
                 </div>
@@ -295,9 +334,9 @@ export function ClientsView({
                     </Button>
                   </div>
                 </div>
-              </li>
+              </Panel>
             ))}
-          </ul>
+          </div>
         </>
       )}
 

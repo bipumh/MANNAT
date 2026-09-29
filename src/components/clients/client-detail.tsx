@@ -15,13 +15,22 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { ClientStatusBadge, InvoiceStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientDialog } from "@/components/clients/client-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
 import { formatBudget, formatDate, formatDateShort } from "@/lib/format";
 import type { Client, Invoice, Project } from "@/types";
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 export function ClientDetail({
   client,
@@ -42,33 +51,47 @@ export function ClientDetail({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link
-            href="/dashboard/clients"
-            className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Clients
-          </Link>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-              {client.name}
-            </h2>
-            <ClientStatusBadge status={client.status} />
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <Link
+              href="/dashboard/clients"
+              className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
+            >
+              <ArrowLeft aria-hidden className="h-4 w-4" />
+              Clients
+            </Link>
+            <div className="mt-3 flex items-center gap-4">
+              <Avatar
+                initials={initials(client.name)}
+                className="h-14 w-14 text-base"
+              />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                    {client.name}
+                  </h1>
+                  <ClientStatusBadge status={client.status} />
+                </div>
+                {client.company ? (
+                  <p className="mt-1 text-sm text-muted">{client.company}</p>
+                ) : null}
+              </div>
+            </div>
           </div>
-          {client.company ? (
-            <p className="mt-1 text-sm text-muted">{client.company}</p>
-          ) : null}
+          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+            <Pencil aria-hidden className="h-4 w-4" />
+            Edit
+          </Button>
         </div>
-        <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-          <Pencil aria-hidden className="h-4 w-4" />
-          Edit
-        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Contact" />
           {hasContact ? (
             <ul className="space-y-3 text-sm">
@@ -108,7 +131,11 @@ export function ClientDetail({
           )}
         </Panel>
 
-        <Panel className="lg:col-span-2">
+        <Panel
+          spotlight
+          spotlightColor={SPOTLIGHT_NEUTRAL}
+          className="lg:col-span-2"
+        >
           <PanelHeader title="Notes" />
           {client.notes ? (
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
@@ -124,7 +151,7 @@ export function ClientDetail({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Projects" />
           <EmptyState
             icon={FolderKanban}
@@ -133,7 +160,7 @@ export function ClientDetail({
           />
         </Panel>
 
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader
             title="Invoices"
             action={
