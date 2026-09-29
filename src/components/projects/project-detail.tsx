@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge, ProjectPriorityBadge, ProjectStatusBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectDialog } from "@/components/projects/project-dialog";
@@ -32,6 +34,13 @@ const financialMeta: Record<
   "over-budget": { label: "Over budget", variant: "danger" },
   "no-budget": { label: "No budget", variant: "neutral" },
 };
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 export function ProjectDetail({
   project,
@@ -77,36 +86,50 @@ export function ProjectDetail({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link
-            href="/dashboard/projects"
-            className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Projects
-          </Link>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-              {project.name}
-            </h2>
-            <ProjectStatusBadge status={project.status} />
-            <ProjectPriorityBadge priority={project.priority} />
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <Link
+              href="/dashboard/projects"
+              className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
+            >
+              <ArrowLeft aria-hidden className="h-4 w-4" />
+              Projects
+            </Link>
+            <div className="mt-3 flex items-center gap-4">
+              <Avatar
+                initials={initials(project.name)}
+                className="h-14 w-14 text-base"
+              />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                    {project.name}
+                  </h1>
+                  <ProjectStatusBadge status={project.status} />
+                  <ProjectPriorityBadge priority={project.priority} />
+                </div>
+                <Link
+                  href={`/dashboard/clients/${project.clientId}`}
+                  className="mt-1 inline-block text-sm text-muted transition-colors hover:text-primary-bright"
+                >
+                  {clientLabel}
+                </Link>
+              </div>
+            </div>
           </div>
-          <Link
-            href={`/dashboard/clients/${project.clientId}`}
-            className="mt-1 inline-block text-sm text-muted transition-colors hover:text-primary-bright"
-          >
-            {clientLabel}
-          </Link>
+          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+            <Pencil aria-hidden className="h-4 w-4" />
+            Edit
+          </Button>
         </div>
-        <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-          <Pencil aria-hidden className="h-4 w-4" />
-          Edit
-        </Button>
       </div>
 
-      <Panel>
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader title="Overview" />
         {project.description ? (
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
@@ -128,7 +151,7 @@ export function ProjectDetail({
         </div>
       </Panel>
 
-      <Panel>
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader
           title="Progress"
           description={
@@ -166,9 +189,9 @@ export function ProjectDetail({
           />
         ) : (
           <>
-            <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-line">
+            <div className="mb-4 h-2 overflow-hidden rounded-full bg-line">
               <div
-                className="h-full rounded-full bg-primary"
+                className="h-full rounded-full bg-gradient-to-r from-primary to-primary-bright"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -206,7 +229,7 @@ export function ProjectDetail({
       </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader
             title="Invoices"
             action={
@@ -261,7 +284,7 @@ export function ProjectDetail({
             </ul>
           )}
         </Panel>
-        <Panel>
+        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader
             title="Financials"
             action={
