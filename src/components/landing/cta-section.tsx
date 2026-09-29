@@ -20,8 +20,8 @@ export function CtaSection() {
           </Reveal>
           <Reveal delay={0.12}>
             <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted sm:text-[17px]">
-              Join thousands of teams using MANNAT to keep clients, projects and
-              cash flow in perfect view.
+              Manage clients, projects, tasks, invoices, and cash flow in one
+              workspace.
             </p>
           </Reveal>
           <Reveal delay={0.18}>
@@ -35,7 +35,7 @@ export function CtaSection() {
               </Button>
             </div>
             <p className="mt-4 text-xs text-faint">
-              Free 14-day trial · No credit card required
+              Explore MANNAT and see how your workflow can stay organized.
             </p>
           </Reveal>
         </div>

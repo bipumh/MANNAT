@@ -1,5 +1,5 @@
 import { Logo } from "@/components/brand/logo";
-import { Avatar } from "@/components/ui/avatar";
+import { AuthAmbient } from "@/components/auth/auth-ambient";
 
 export default function AuthLayout({
   children,
@@ -18,31 +18,27 @@ export default function AuthLayout({
 
         <div className="relative">
           <p className="max-w-md font-display text-2xl font-medium leading-snug text-foreground">
-            &ldquo;MANNAT gives our whole team one clear view of clients,
-            projects and cash flow.&rdquo;
+            Because spreadsheets have feelings too. 🥹
           </p>
-          <div className="mt-6 flex items-center gap-3">
-            <Avatar initials="SR" tone="primary" className="h-10 w-10 text-sm" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Sofia Reyes</p>
-              <p className="text-xs text-dim">
-                Operations Lead, Northwind Labs
-              </p>
-            </div>
-          </div>
+          <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted">
+            Give your clients, projects, tasks, and invoices a better place to
+            live. ✨
+          </p>
         </div>
 
-        <div className="relative text-xs text-faint">Trusted by 2,000+ teams</div>
+        <div className="relative" aria-hidden />
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center px-5 sm:px-8 lg:hidden">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
+        <AuthAmbient />
+
+        <header className="relative flex h-16 items-center px-5 sm:px-8 lg:hidden">
           <Logo />
         </header>
-        <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-12">
+        <main className="relative flex flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-12">
           {children}
         </main>
-        <footer className="hidden justify-center pb-8 text-xs text-faint lg:flex">
+        <footer className="relative hidden justify-center pb-8 text-xs text-faint lg:flex">
           © {new Date().getFullYear()} Mannat Labs
         </footer>
       </div>
