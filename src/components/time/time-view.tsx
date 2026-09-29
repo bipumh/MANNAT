@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { FileText, Plus, Search, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Panel } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimeDialog } from "@/components/time/time-dialog";
 import { TimeInvoiceDialog } from "@/components/time/time-invoice-dialog";
@@ -136,29 +138,38 @@ export function TimeView({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            Time
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Log billable and non-billable hours across your projects.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            variant="surface"
-            onClick={() => setInvoiceOpen(true)}
-          >
-            <FileText aria-hidden className="h-4 w-4" />
-            Invoice time
-          </Button>
-          <Button size="sm" onClick={openCreate}>
-            <Plus aria-hidden className="h-4 w-4" />
-            Log time
-          </Button>
+    <div className="space-y-6">
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Time
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Time
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-muted">
+              Log billable and non-billable hours across your projects.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="surface"
+              onClick={() => setInvoiceOpen(true)}
+            >
+              <FileText aria-hidden className="h-4 w-4" />
+              Invoice time
+            </Button>
+            <Button size="sm" onClick={openCreate}>
+              <Plus aria-hidden className="h-4 w-4" />
+              Log time
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -269,7 +280,11 @@ export function TimeView({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-line bg-surface md:block">
+          <Panel
+            spotlight
+            spotlightColor={SPOTLIGHT_NEUTRAL}
+            className="hidden overflow-hidden p-0 md:block"
+          >
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs font-medium text-dim">
@@ -288,9 +303,9 @@ export function TimeView({
                   return (
                     <tr
                       key={entry.id}
-                      className="group transition-colors hover:bg-surface-2/50"
+                      className="group transition-colors hover:bg-surface-2/40"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <Link
                           href={`/dashboard/time/${entry.id}`}
                           className="block"
@@ -305,26 +320,26 @@ export function TimeView({
                           ) : null}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-muted">
+                      <td className="px-4 py-3.5 text-muted">
                         {entry.projectName}
                       </td>
-                      <td className="px-4 py-3 text-muted">
+                      <td className="px-4 py-3.5 text-muted">
                         {entry.taskTitle ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
+                      <td className="px-4 py-3.5 text-right font-semibold tabular-nums text-foreground">
                         {formatDuration(entry.durationMinutes)}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
+                      <td className="px-4 py-3.5 text-right font-medium tabular-nums text-muted">
                         {amount !== null ? formatCurrencyPrecise(amount) : "—"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         {entry.billable ? (
                           <Badge variant="success">Billable</Badge>
                         ) : (
                           <Badge variant="neutral">Non-billable</Badge>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                           <Button
                             variant="ghost"
@@ -348,19 +363,24 @@ export function TimeView({
                 })}
               </tbody>
             </table>
-          </div>
+          </Panel>
 
           {/* Mobile cards */}
-          <ul className="space-y-3 md:hidden">
+          <div className="space-y-3 md:hidden">
             {entries.map((entry) => {
               const amount = entryAmount(entry);
               return (
-                <li
+                <Panel
                   key={entry.id}
-                  className="rounded-xl border border-line bg-surface p-4"
+                  spotlight
+                  spotlightColor={SPOTLIGHT_NEUTRAL}
+                  className="p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <Link href={`/dashboard/time/${entry.id}`} className="min-w-0">
+                    <Link
+                      href={`/dashboard/time/${entry.id}`}
+                      className="min-w-0"
+                    >
                       <p className="font-medium text-foreground">
                         {formatDateShort(entry.date)}
                       </p>
@@ -369,13 +389,15 @@ export function TimeView({
                         {entry.taskTitle ? ` · ${entry.taskTitle}` : ""}
                       </p>
                     </Link>
-                    <span className="font-medium tabular-nums text-foreground">
+                    <span className="font-semibold tabular-nums text-foreground">
                       {formatDuration(entry.durationMinutes)}
                     </span>
                   </div>
 
                   {entry.description ? (
-                    <p className="mt-2 text-sm text-muted">{entry.description}</p>
+                    <p className="mt-2 text-sm text-muted">
+                      {entry.description}
+                    </p>
                   ) : null}
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -385,7 +407,7 @@ export function TimeView({
                       <Badge variant="neutral">Non-billable</Badge>
                     )}
                     {amount !== null ? (
-                      <span className="text-xs font-medium tabular-nums text-foreground">
+                      <span className="text-xs font-medium tabular-nums text-muted">
                         {formatCurrencyPrecise(amount)}
                       </span>
                     ) : null}
@@ -408,10 +430,10 @@ export function TimeView({
                       Delete
                     </Button>
                   </div>
-                </li>
+                </Panel>
               );
             })}
-          </ul>
+          </div>
         </>
       )}
 

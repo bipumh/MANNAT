@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
+import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { Badge } from "@/components/ui/badge";
 import { TimeDialog } from "@/components/time/time-dialog";
 import { deleteTimeEntryAction } from "@/lib/time/actions";
@@ -52,46 +53,52 @@ export function TimeDetail({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link
-            href="/dashboard/time"
-            className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" />
-            Time
-          </Link>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-              {formatDate(entry.date)}
-            </h2>
-            {entry.billable ? (
-              <Badge variant="success">Billable</Badge>
-            ) : (
-              <Badge variant="neutral">Non-billable</Badge>
-            )}
+      <div className="relative">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-10 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Link
+              href="/dashboard/time"
+              className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
+            >
+              <ArrowLeft aria-hidden className="h-4 w-4" />
+              Time
+            </Link>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                {formatDate(entry.date)}
+              </h1>
+              {entry.billable ? (
+                <Badge variant="success">Billable</Badge>
+              ) : (
+                <Badge variant="neutral">Non-billable</Badge>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-muted">
+              {formatDuration(entry.durationMinutes)}
+              {amount !== null
+                ? ` · ${formatCurrencyPrecise(amount)}`
+                : null}
+            </p>
           </div>
-          <p className="mt-1 text-sm text-muted">
-            {formatDuration(entry.durationMinutes)}
-            {amount !== null
-              ? ` · ${formatCurrencyPrecise(amount)}`
-              : null}
-          </p>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button size="sm" variant="ghost" onClick={remove} disabled={busy}>
-            <Trash2 aria-hidden className="h-4 w-4" />
-            Delete
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button size="sm" variant="ghost" onClick={remove} disabled={busy}>
+              <Trash2 aria-hidden className="h-4 w-4" />
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Panel>
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader title="Details" />
         {entry.description ? (
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
