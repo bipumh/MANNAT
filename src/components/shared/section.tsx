@@ -17,7 +17,10 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn("relative py-16 sm:py-20 lg:py-28", className)}
+      className={cn(
+        "relative scroll-mt-0 py-16 sm:py-20 lg:scroll-mt-[-1.5rem] lg:py-28",
+        className,
+      )}
     >
       <Container className={containerClassName}>{children}</Container>
     </section>
