@@ -26,7 +26,7 @@ export function Hero() {
           </Reveal>
 
           <Reveal delay={0.06}>
-            <h1 className="mt-7 font-display text-[clamp(2.4rem,6vw,4.25rem)] font-semibold leading-[1.03] tracking-[-0.03em] text-foreground">
+            <h1 className="mt-7 font-display text-[clamp(2.4rem,6vw,4rem)] font-semibold leading-[1.03] tracking-[-0.03em] text-foreground">
               Every client, project and invoice —{" "}
               <span className="text-primary">one clear view</span>.
             </h1>
