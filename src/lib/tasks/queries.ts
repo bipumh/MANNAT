@@ -20,6 +20,8 @@ type TaskRow = {
   client_id: string | null;
   client_name: string | null;
   client_company: string | null;
+  assignee_user_id: string | null;
+  assignee_name: string | null;
 };
 
 function mapTask(row: TaskRow): Task {
@@ -40,13 +42,31 @@ function mapTask(row: TaskRow): Task {
     clientId: row.client_id ?? null,
     clientName: row.client_name ?? null,
     clientCompany: row.client_company ?? null,
+    assigneeUserId: row.assignee_user_id ?? null,
+    assigneeName: row.assignee_name ?? null,
   };
 }
 
+const TASK_SELECT = `
+  t.id, t.workspace_id, t.project_id, t.title, t.description, t.status, t.priority,
+  t.due_date, t.completed_at, t.archived, t.created_at, t.updated_at,
+  p.name as project_name,
+  c.id as client_id, c.name as client_name, c.company as client_company,
+  t.assignee_user_id,
+  ap.full_name as assignee_name
+`;
+
+const TASK_FROM = `
+  from tasks t
+  join projects p on p.id = t.project_id
+  join clients c on c.id = p.client_id
+  left join profiles ap on ap.id = t.assignee_user_id
+`;
+
 /**
- * Lists the workspace's active (non-archived) tasks, joined with their project,
- * optionally filtered by status / priority / project and a case-insensitive
- * search across title, description and project name.
+ * Lists the workspace's active (non-archived) tasks, joined with their project
+ * and assignee, optionally filtered by status / priority / project and a
+ * case-insensitive search across title, description and project name.
  */
 export async function listTasks(
   workspaceId: string,
@@ -64,12 +84,8 @@ export async function listTasks(
   const projectId = opts.projectId ?? null;
 
   const rows = (await sql.query(
-    `select
-       t.id, t.workspace_id, t.project_id, t.title, t.description, t.status, t.priority,
-       t.due_date, t.completed_at, t.archived, t.created_at, t.updated_at,
-       p.name as project_name
-     from tasks t
-     join projects p on p.id = t.project_id
+    `select ${TASK_SELECT}
+     ${TASK_FROM}
      where t.workspace_id = $1
        and t.archived = false
        and ($2::text is null or t.status = $2)
@@ -87,8 +103,35 @@ export async function listTasks(
 }
 
 /**
- * Returns a single task (joined with its project and client) scoped to the
- * workspace, or `null` when it does not exist or belongs to another workspace.
+ * Lists the active tasks assigned to a specific member (used by My Work),
+ * optionally filtered by status. Scoped to the workspace.
+ */
+export async function listAssignedTasks(
+  workspaceId: string,
+  userId: string,
+  opts: { status?: TaskStatus } = {},
+): Promise<Task[]> {
+  const sql = getDb();
+  const status = opts.status ?? null;
+
+  const rows = (await sql.query(
+    `select ${TASK_SELECT}
+     ${TASK_FROM}
+     where t.workspace_id = $1
+       and t.archived = false
+       and t.assignee_user_id = $2
+       and ($3::text is null or t.status = $3)
+     order by t.created_at desc`,
+    [workspaceId, userId, status],
+  )) as TaskRow[];
+
+  return rows.map(mapTask);
+}
+
+/**
+ * Returns a single task (joined with its project, client and assignee) scoped
+ * to the workspace, or `null` when it does not exist or belongs to another
+ * workspace.
  */
 export async function getTask(
   workspaceId: string,
@@ -97,14 +140,8 @@ export async function getTask(
   const sql = getDb();
 
   const rows = (await sql.query(
-    `select
-       t.id, t.workspace_id, t.project_id, t.title, t.description, t.status, t.priority,
-       t.due_date, t.completed_at, t.archived, t.created_at, t.updated_at,
-       p.name as project_name,
-       c.id as client_id, c.name as client_name, c.company as client_company
-     from tasks t
-     join projects p on p.id = t.project_id
-     join clients c on c.id = p.client_id
+    `select ${TASK_SELECT}
+     ${TASK_FROM}
      where t.workspace_id = $1 and t.id = $2
      limit 1`,
     [workspaceId, taskId],

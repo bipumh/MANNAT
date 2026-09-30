@@ -22,8 +22,9 @@ import { ClientStatusBadge, InvoiceStatusBadge } from "@/components/dashboard/st
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientDialog } from "@/components/clients/client-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
+import { WorkHistory } from "@/components/work-log/work-history";
 import { formatBudget, formatDate, formatDateShort } from "@/lib/format";
-import type { Client, Invoice, Project } from "@/types";
+import type { Client, Invoice, Project, WorkLog } from "@/types";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -37,11 +38,13 @@ export function ClientDetail({
   invoices,
   clients,
   projects,
+  workLogs,
 }: {
   client: Client;
   invoices: Invoice[];
   clients: Client[];
   projects: Project[];
+  workLogs: WorkLog[];
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -216,6 +219,11 @@ export function ClientDetail({
           )}
         </Panel>
       </div>
+
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
+        <PanelHeader title="Work history" description="What the team has done for this client" />
+        <WorkHistory logs={workLogs} />
+      </Panel>
 
       {editing ? (
         <ClientDialog

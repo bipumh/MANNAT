@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BarChart3,
+  Briefcase,
   CheckSquare,
   ChevronsUpDown,
   FileText,
@@ -29,6 +30,7 @@ type NavSection = { label?: string; items: NavItem[] };
 const sections: NavSection[] = [
   {
     items: [
+      { label: "My Work", href: "/dashboard/my-work", icon: Briefcase },
       { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
       { label: "Activity", href: "/dashboard/activity", icon: Activity },
       { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },

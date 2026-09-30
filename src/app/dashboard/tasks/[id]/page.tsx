@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import { getTask } from "@/lib/tasks/queries";
 import { listProjects } from "@/lib/projects/queries";
+import { listWorkspaceMembers } from "@/lib/team/queries";
 import { TaskDetail } from "@/components/tasks/task-detail";
 
 export const metadata: Metadata = {
@@ -22,7 +24,17 @@ export default async function TaskDetailPage({
   const task = await getTask(user.workspaceId, id);
   if (!task) notFound();
 
-  const projects = await listProjects(user.workspaceId);
+  const [projects, members] = await Promise.all([
+    listProjects(user.workspaceId),
+    listWorkspaceMembers(user.workspaceId),
+  ]);
 
-  return <TaskDetail task={task} projects={projects} />;
+  return (
+    <TaskDetail
+      task={task}
+      projects={projects}
+      members={members}
+      canManage={canManage(user)}
+    />
+  );
 }

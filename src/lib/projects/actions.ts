@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
+import { canManage } from "@/lib/auth/roles";
+import { notifyUser } from "@/lib/notifications/notify";
 import type { ProjectPriority, ProjectStatus } from "@/types";
 
 export type ProjectFormState = {
@@ -188,5 +190,83 @@ export async function archiveProjectAction(id: string): Promise<{ ok: boolean }>
 
   revalidatePath("/dashboard/projects");
   revalidatePath(`/dashboard/projects/${id}`);
+  return { ok: true };
+}
+
+/**
+ * Replaces the set of members assigned to a project. Only owners/admins may
+ * assign members; every supplied user id must belong to the current workspace.
+ * The authenticated user's workspace/role are derived server-side.
+ */
+export async function setProjectMembersAction(
+  projectId: string,
+  userIds: string[],
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { ok: false, error: "You don't have permission to assign members." };
+  }
+
+  const sql = getDb();
+
+  const projectRows = await sql`
+    select id, name from projects
+    where workspace_id = ${user.workspaceId} and id = ${projectId}
+    limit 1
+  `;
+  if (projectRows.length === 0) {
+    return { ok: false, error: "Project not found." };
+  }
+  const projectName = projectRows[0]?.name as string;
+
+  const unique = [...new Set(userIds.map((id) => String(id).trim()).filter(Boolean))];
+
+  try {
+    await sql`delete from project_members where workspace_id = ${user.workspaceId} and project_id = ${projectId}`;
+
+    for (const memberUserId of unique) {
+      const memberRows = await sql`
+        select 1 from workspace_members
+        where workspace_id = ${user.workspaceId} and user_id = ${memberUserId}
+        limit 1
+      `;
+      if (memberRows.length === 0) continue;
+
+      await sql`
+        insert into project_members (workspace_id, project_id, user_id)
+        values (${user.workspaceId}, ${projectId}, ${memberUserId})
+        on conflict (project_id, user_id) do nothing
+      `;
+
+      if (memberUserId !== user.id) {
+        await notifyUser({
+          workspaceId: user.workspaceId,
+          userId: memberUserId,
+          type: "project.assigned",
+          title: "Assigned to a project",
+          message: `You were added to "${projectName}".`,
+          entityType: "project",
+          entityId: projectId,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("[mannat] set project members failed:", err);
+    return { ok: false, error: "Could not update project members." };
+  }
+
+  await logActivity({
+    workspaceId: user.workspaceId,
+    actorUserId: user.id,
+    eventType: "project.members_updated",
+    entityType: "project",
+    entityId: projectId,
+    title: "Project team updated",
+    description: `updated the team for "${projectName}"`,
+  });
+
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  revalidatePath("/dashboard/my-work");
   return { ok: true };
 }

@@ -350,7 +350,10 @@ export function TasksView({
                           >
                             {task.title}
                           </p>
-                          <p className="text-xs text-dim">{task.projectName}</p>
+                          <p className="text-xs text-dim">
+                            {task.projectName}
+                            {task.assigneeName ? ` · ${task.assigneeName}` : ""}
+                          </p>
                         </Link>
                       </td>
                       <td className="px-4 py-3.5">
@@ -433,6 +436,7 @@ export function TasksView({
                       </Link>
                       <p className="truncate text-xs text-dim">
                         {task.projectName}
+                        {task.assigneeName ? ` · ${task.assigneeName}` : ""}
                       </p>
                     </div>
                   </div>

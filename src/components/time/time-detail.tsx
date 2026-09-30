@@ -162,6 +162,12 @@ export function TimeDetail({
               {amount !== null ? formatCurrencyPrecise(amount) : "—"}
             </p>
           </div>
+          <div>
+            <p className="text-xs text-faint">Logged by</p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {entry.userName ?? "—"}
+            </p>
+          </div>
         </div>
       </Panel>
 

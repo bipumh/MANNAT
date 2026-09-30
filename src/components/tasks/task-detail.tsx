@@ -13,22 +13,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
+import { Select } from "@/components/ui/field";
 import { TaskPriorityBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import {
   archiveTaskAction,
+  assignTaskAction,
   completeTaskAction,
   reopenTaskAction,
 } from "@/lib/tasks/actions";
 import { formatDate } from "@/lib/format";
-import type { Project, Task } from "@/types";
+import type { Project, Task, WorkspaceMember } from "@/types";
 
 export function TaskDetail({
   task,
   projects,
+  members,
+  canManage,
 }: {
   task: Task;
   projects: Project[];
+  members: WorkspaceMember[];
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -54,6 +60,13 @@ export function TaskDetail({
     if (!window.confirm(`Archive "${task.title}"?`)) return;
     setBusy(true);
     await archiveTaskAction(task.id);
+    setBusy(false);
+    router.refresh();
+  }
+
+  async function changeAssignee(userId: string) {
+    setBusy(true);
+    await assignTaskAction(task.id, userId || null);
     setBusy(false);
     router.refresh();
   }
@@ -148,6 +161,29 @@ export function TaskDetail({
               </Link>
             ) : (
               <p className="mt-1 text-sm font-medium text-foreground">—</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-faint">Assigned to</p>
+            {canManage ? (
+              <Select
+                aria-label="Assigned to"
+                value={task.assigneeUserId ?? ""}
+                onChange={(event) => changeAssignee(event.target.value)}
+                disabled={busy}
+                className="mt-1"
+              >
+                <option value="">Unassigned</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.userId}>
+                    {member.fullName}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {task.assigneeName ?? "Unassigned"}
+              </p>
             )}
           </div>
           {facts.map((fact) => (

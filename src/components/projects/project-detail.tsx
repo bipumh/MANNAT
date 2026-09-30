@@ -18,11 +18,13 @@ import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge, ProjectPriorityBadge, ProjectStatusBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectDialog } from "@/components/projects/project-dialog";
+import { ProjectTeam } from "@/components/projects/project-team";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
+import { WorkHistory } from "@/components/work-log/work-history";
 import { formatBudget, formatCurrencyPrecise, formatDate, formatDateShort, formatDuration } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import type { Client, Invoice, Project, Task } from "@/types";
+import type { Client, Invoice, Project, Task, WorkLog, WorkspaceMember } from "@/types";
 import type { ProjectFinancialStatus, ProjectProfitability } from "@/lib/projects/profitability";
 
 const financialMeta: Record<
@@ -49,6 +51,10 @@ export function ProjectDetail({
   tasks,
   invoices,
   profitability,
+  assignedMembers,
+  allMembers,
+  canManage,
+  workLogs,
 }: {
   project: Project;
   clients: Client[];
@@ -56,6 +62,10 @@ export function ProjectDetail({
   tasks: Task[];
   invoices: Invoice[];
   profitability: ProjectProfitability | null;
+  assignedMembers: WorkspaceMember[];
+  allMembers: WorkspaceMember[];
+  canManage: boolean;
+  workLogs: WorkLog[];
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -149,6 +159,16 @@ export function ProjectDetail({
             </div>
           ))}
         </div>
+      </Panel>
+
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
+        <PanelHeader title="Team" description="Members assigned to this project" />
+        <ProjectTeam
+          projectId={project.id}
+          assigned={assignedMembers}
+          allMembers={allMembers}
+          canManage={canManage}
+        />
       </Panel>
 
       <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
@@ -357,6 +377,11 @@ export function ProjectDetail({
           )}
         </Panel>
       </div>
+
+      <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
+        <PanelHeader title="Work history" description="What the team has done on this project" />
+        <WorkHistory logs={workLogs} />
+      </Panel>
 
       {editing ? (
         <ProjectDialog

@@ -20,6 +20,8 @@ type TimeEntryRow = {
   client_id: string | null;
   client_name: string | null;
   client_company: string | null;
+  user_id: string | null;
+  user_name: string | null;
 };
 
 function mapTimeEntry(row: TimeEntryRow): TimeEntry {
@@ -40,21 +42,34 @@ function mapTimeEntry(row: TimeEntryRow): TimeEntry {
     clientId: row.client_id ?? null,
     clientName: row.client_name ?? null,
     clientCompany: row.client_company ?? null,
+    userId: row.user_id ?? null,
+    userName: row.user_name ?? null,
   };
 }
 
-const TIME_ENTRY_COLUMNS = `
+const TIME_ENTRY_SELECT = `
   t.id, t.workspace_id, t.project_id, t.task_id, t.description, t.date,
   t.duration_minutes, t.billable, t.hourly_rate, t.created_at, t.updated_at,
   p.name as project_name,
   tk.title as task_title,
-  c.id as client_id, c.name as client_name, c.company as client_company
+  c.id as client_id, c.name as client_name, c.company as client_company,
+  t.user_id,
+  up.full_name as user_name
+`;
+
+const TIME_ENTRY_FROM = `
+  from time_entries t
+  join projects p on p.id = t.project_id
+  join clients c on c.id = p.client_id
+  left join tasks tk on tk.id = t.task_id
+  left join profiles up on up.id = t.user_id
 `;
 
 /**
- * Lists the workspace's time entries, joined with project / task / client,
- * optionally filtered by project, task, billable flag and a case-insensitive
- * search across description, project name, task title and client name.
+ * Lists the workspace's time entries, joined with project / task / client /
+ * owner, optionally filtered by project, task, billable flag, owner and a
+ * case-insensitive search across description, project name, task title and
+ * client name.
  */
 export async function listTimeEntries(
   workspaceId: string,
@@ -63,6 +78,7 @@ export async function listTimeEntries(
     projectId?: string;
     taskId?: string;
     billable?: boolean;
+    userId?: string;
   } = {},
 ): Promise<TimeEntry[]> {
   const sql = getDb();
@@ -70,33 +86,32 @@ export async function listTimeEntries(
   const projectId = opts.projectId ?? null;
   const taskId = opts.taskId ?? null;
   const billable = opts.billable === undefined ? null : opts.billable;
+  const userId = opts.userId ?? null;
 
   const rows = (await sql.query(
-    `select ${TIME_ENTRY_COLUMNS}
-     from time_entries t
-     join projects p on p.id = t.project_id
-     join clients c on c.id = p.client_id
-     left join tasks tk on tk.id = t.task_id
+    `select ${TIME_ENTRY_SELECT}
+     ${TIME_ENTRY_FROM}
      where t.workspace_id = $1
        and ($2::text is null or t.project_id = $2::uuid)
        and ($3::text is null or t.task_id = $3::uuid)
        and ($4::boolean is null or t.billable = $4)
-       and ($5::text is null
-            or t.description ilike $5
-            or p.name ilike $5
-            or tk.title ilike $5
-            or c.name ilike $5)
+       and ($5::text is null or t.user_id = $5)
+       and ($6::text is null
+            or t.description ilike $6
+            or p.name ilike $6
+            or tk.title ilike $6
+            or c.name ilike $6)
      order by t.date desc, t.created_at desc`,
-    [workspaceId, projectId, taskId, billable, term],
+    [workspaceId, projectId, taskId, billable, userId, term],
   )) as TimeEntryRow[];
 
   return rows.map(mapTimeEntry);
 }
 
 /**
- * Returns a single time entry (joined with project, task and client) scoped to
- * the workspace, or `null` when it does not exist or belongs to another
- * workspace.
+ * Returns a single time entry (joined with project, task, client and owner)
+ * scoped to the workspace, or `null` when it does not exist or belongs to
+ * another workspace.
  */
 export async function getTimeEntry(
   workspaceId: string,
@@ -105,11 +120,8 @@ export async function getTimeEntry(
   const sql = getDb();
 
   const rows = (await sql.query(
-    `select ${TIME_ENTRY_COLUMNS}
-     from time_entries t
-     join projects p on p.id = t.project_id
-     join clients c on c.id = p.client_id
-     left join tasks tk on tk.id = t.task_id
+    `select ${TIME_ENTRY_SELECT}
+     ${TIME_ENTRY_FROM}
      where t.workspace_id = $1 and t.id = $2
      limit 1`,
     [workspaceId, timeEntryId],

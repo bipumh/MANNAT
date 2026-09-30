@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
+import { canManage } from "@/lib/auth/roles";
 import { formatDuration } from "@/lib/format";
 
 export type TimeEntryFormState = {
@@ -82,6 +83,26 @@ async function taskBelongsToProject(
   return rows.length > 0;
 }
 
+/**
+ * Whether the authenticated user may edit/delete a given time entry: owners and
+ * admins may manage any entry; other members may only manage their own.
+ */
+async function canManageTimeEntry(
+  workspaceId: string,
+  userId: string,
+  role: string,
+  entryId: string,
+): Promise<boolean> {
+  if (role === "owner" || role === "admin") return true;
+  const sql = getDb();
+  const rows = await sql`
+    select id from time_entries
+    where workspace_id = ${workspaceId} and id = ${entryId} and user_id = ${userId}
+    limit 1
+  `;
+  return rows.length > 0;
+}
+
 export async function createTimeEntryAction(
   input: TimeEntryInput,
 ): Promise<TimeEntryFormState> {
@@ -106,7 +127,7 @@ export async function createTimeEntryAction(
     const rows = await sql`
       insert into time_entries (
         workspace_id, project_id, task_id, description, date,
-        duration_minutes, billable, hourly_rate
+        duration_minutes, billable, hourly_rate, user_id
       )
       values (
         ${user.workspaceId},
@@ -116,7 +137,8 @@ export async function createTimeEntryAction(
         ${input.date.trim() || todayISO()},
         ${input.durationMinutes},
         ${input.billable},
-        ${rateToDb(input.hourlyRate)}
+        ${rateToDb(input.hourlyRate)},
+        ${user.id}
       )
       returning id
     `;
@@ -154,6 +176,10 @@ export async function updateTimeEntryAction(
 ): Promise<TimeEntryFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+
+  if (!(await canManageTimeEntry(user.workspaceId, user.id, user.role, id))) {
+    return { error: "You can only edit your own time entries." };
+  }
 
   const error = validate(input);
   if (error) return { error };
@@ -196,6 +222,10 @@ export async function updateTimeEntryAction(
 export async function deleteTimeEntryAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+
+  if (!(await canManageTimeEntry(user.workspaceId, user.id, user.role, id))) {
+    return { ok: false };
+  }
 
   try {
     const sql = getDb();
@@ -244,6 +274,9 @@ export async function createInvoiceFromTimeAction(input: {
 }): Promise<TimeEntryFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "Only owners and admins can create invoices." };
+  }
 
   if (!input.projectId) return { error: "Select a project." };
   if (!(await projectExistsInWorkspace(user.workspaceId, input.projectId))) {

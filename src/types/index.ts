@@ -141,6 +141,8 @@ export type Task = {
   clientId: string | null;
   clientName: string | null;
   clientCompany: string | null;
+  assigneeUserId: string | null;
+  assigneeName: string | null;
 };
 
 // Persistent time entry (Neon PostgreSQL).
@@ -161,6 +163,8 @@ export type TimeEntry = {
   clientId: string | null;
   clientName: string | null;
   clientCompany: string | null;
+  userId: string | null;
+  userName: string | null;
 };
 
 // Workspace membership (Team & Members module).
@@ -174,6 +178,28 @@ export type WorkspaceMember = {
   createdAt: string;
   fullName: string;
   email: string | null;
+};
+
+// A narrative record of work a member actually performed (Work Log module).
+export type WorkLog = {
+  id: string;
+  workspaceId: string;
+  clientId: string;
+  projectId: string;
+  taskId: string | null;
+  userId: string;
+  workDate: string;
+  description: string;
+  durationMinutes: number;
+  billable: boolean;
+  rate: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  userName: string | null;
+  clientName: string | null;
+  projectName: string | null;
+  taskTitle: string | null;
 };
 
 export type TeamInvitation = {

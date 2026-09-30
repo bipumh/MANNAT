@@ -321,7 +321,10 @@ export function TimeView({
                         </Link>
                       </td>
                       <td className="px-4 py-3.5 text-muted">
-                        {entry.projectName}
+                        <p>{entry.projectName}</p>
+                        {entry.userName ? (
+                          <p className="text-xs text-faint">{entry.userName}</p>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3.5 text-muted">
                         {entry.taskTitle ?? "—"}
@@ -387,6 +390,7 @@ export function TimeView({
                       <p className="truncate text-xs text-dim">
                         {entry.projectName}
                         {entry.taskTitle ? ` · ${entry.taskTitle}` : ""}
+                        {entry.userName ? ` · ${entry.userName}` : ""}
                       </p>
                     </Link>
                     <span className="font-semibold tabular-nums text-foreground">

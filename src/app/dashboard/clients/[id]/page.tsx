@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getClient, listClients } from "@/lib/clients/queries";
 import { listProjects } from "@/lib/projects/queries";
 import { listInvoices } from "@/lib/invoices/queries";
+import { listWorkLogsByClient } from "@/lib/work-log/queries";
 import { ClientDetail } from "@/components/clients/client-detail";
 
 export const metadata: Metadata = {
@@ -23,10 +24,11 @@ export default async function ClientDetailPage({
   const client = await getClient(user.workspaceId, id);
   if (!client) notFound();
 
-  const [clients, projects, invoices] = await Promise.all([
+  const [clients, projects, invoices, workLogs] = await Promise.all([
     listClients(user.workspaceId),
     listProjects(user.workspaceId),
     listInvoices(user.workspaceId, { clientId: id }),
+    listWorkLogsByClient(user.workspaceId, id),
   ]);
 
   return (
@@ -35,6 +37,7 @@ export default async function ClientDetailPage({
       invoices={invoices}
       clients={clients}
       projects={projects}
+      workLogs={workLogs}
     />
   );
 }

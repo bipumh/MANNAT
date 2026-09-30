@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
+import { canManage } from "@/lib/auth/roles";
+import { notifyUser } from "@/lib/notifications/notify";
 import type { TaskPriority, TaskStatus } from "@/types";
 
 export type TaskFormState = {
@@ -228,5 +230,82 @@ export async function archiveTaskAction(id: string): Promise<{ ok: boolean }> {
   revalidatePath("/dashboard/tasks");
   revalidatePath(`/dashboard/tasks/${id}`);
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/**
+ * Assigns (or unassigns) a task to a workspace member. Only owners/admins may
+ * assign tasks. The assignee must be a current workspace member. Pass
+ * `assigneeUserId` as `null` (or empty) to clear the assignment.
+ */
+export async function assignTaskAction(
+  id: string,
+  assigneeUserId: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { ok: false, error: "You don't have permission to assign tasks." };
+  }
+
+  const sql = getDb();
+
+  const taskRows = await sql`
+    select title from tasks
+    where workspace_id = ${user.workspaceId} and id = ${id}
+    limit 1
+  `;
+  if (taskRows.length === 0) return { ok: false, error: "Task not found." };
+  const taskTitle = taskRows[0]?.title as string;
+
+  const nextAssignee = assigneeUserId?.trim() || null;
+
+  if (nextAssignee) {
+    const memberRows = await sql`
+      select 1 from workspace_members
+      where workspace_id = ${user.workspaceId} and user_id = ${nextAssignee}
+      limit 1
+    `;
+    if (memberRows.length === 0) {
+      return { ok: false, error: "Selected member not found." };
+    }
+  }
+
+  try {
+    await sql`
+      update tasks
+      set assignee_user_id = ${nextAssignee}, updated_at = now()
+      where workspace_id = ${user.workspaceId} and id = ${id}
+    `;
+  } catch (err) {
+    console.error("[mannat] assign task failed:", err);
+    return { ok: false, error: "Could not assign the task." };
+  }
+
+  if (nextAssignee && nextAssignee !== user.id) {
+    await notifyUser({
+      workspaceId: user.workspaceId,
+      userId: nextAssignee,
+      type: "task.assigned",
+      title: "Task assigned to you",
+      message: `"${taskTitle}" was assigned to you.`,
+      entityType: "task",
+      entityId: id,
+    });
+  }
+
+  await logActivity({
+    workspaceId: user.workspaceId,
+    actorUserId: user.id,
+    eventType: "task.assigned",
+    entityType: "task",
+    entityId: id,
+    title: "Task assigned",
+    description: `assigned "${taskTitle}"`,
+  });
+
+  revalidatePath("/dashboard/tasks");
+  revalidatePath(`/dashboard/tasks/${id}`);
+  revalidatePath("/dashboard/my-work");
   return { ok: true };
 }

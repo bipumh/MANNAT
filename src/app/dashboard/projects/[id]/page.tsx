@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import { getProject, listProjects } from "@/lib/projects/queries";
 import { getProjectProfitability } from "@/lib/projects/profitability";
+import { listProjectMembers } from "@/lib/projects/members";
 import { listClients } from "@/lib/clients/queries";
 import { listTasks } from "@/lib/tasks/queries";
 import { listInvoices } from "@/lib/invoices/queries";
+import { listWorkspaceMembers } from "@/lib/team/queries";
+import { listWorkLogsByProject } from "@/lib/work-log/queries";
 import { ProjectDetail } from "@/components/projects/project-detail";
 
 export const metadata: Metadata = {
@@ -25,12 +29,24 @@ export default async function ProjectDetailPage({
   const project = await getProject(user.workspaceId, id);
   if (!project) notFound();
 
-  const [clients, projects, tasks, invoices, profitability] = await Promise.all([
+  const [
+    clients,
+    projects,
+    tasks,
+    invoices,
+    profitability,
+    assignedMembers,
+    allMembers,
+    workLogs,
+  ] = await Promise.all([
     listClients(user.workspaceId),
     listProjects(user.workspaceId),
     listTasks(user.workspaceId, { projectId: id }),
     listInvoices(user.workspaceId, { projectId: id }),
     getProjectProfitability(user.workspaceId, id),
+    listProjectMembers(user.workspaceId, id),
+    listWorkspaceMembers(user.workspaceId),
+    listWorkLogsByProject(user.workspaceId, id),
   ]);
 
   return (
@@ -41,6 +57,10 @@ export default async function ProjectDetailPage({
       tasks={tasks}
       invoices={invoices}
       profitability={profitability}
+      assignedMembers={assignedMembers}
+      allMembers={allMembers}
+      canManage={canManage(user)}
+      workLogs={workLogs}
     />
   );
 }
