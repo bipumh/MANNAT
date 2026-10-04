@@ -299,6 +299,20 @@ export async function removeMemberAction(
     return { error: "Admins cannot remove other admins." };
   }
 
+  const removedUserId = target.user_id as string;
+
+  // Clean up this member's assignments within this workspace so removing them
+  // doesn't leave stale project memberships or task assignments behind.
+  await sql`
+    delete from project_members
+    where workspace_id = ${user.workspaceId} and user_id = ${removedUserId}
+  `;
+  await sql`
+    update tasks
+    set assignee_user_id = null, updated_at = now()
+    where workspace_id = ${user.workspaceId} and assignee_user_id = ${removedUserId}
+  `;
+
   await sql`
     delete from workspace_members
     where workspace_id = ${user.workspaceId} and id = ${memberId}
