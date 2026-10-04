@@ -36,6 +36,7 @@ export default async function MyWorkPage() {
       clients={clients}
       projects={dialogProjects}
       tasks={allTasks}
+      canManage={canManage(user)}
     />
   );
 }

@@ -41,15 +41,19 @@ export function MyWorkView({
   clients,
   projects,
   tasks,
+  canManage,
 }: {
   data: MyWorkData;
   clients: Client[];
   projects: Project[];
   tasks: Task[];
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [recording, setRecording] = useState(false);
   const [taskFilter, setTaskFilter] = useState<TaskFilter | undefined>(undefined);
+
+  const canRecord = canManage || projects.length > 0;
 
   const openTasks = data.tasks.filter((t) => t.status !== "completed");
   const overdueTasks = data.tasks.filter(isOverdue);
@@ -94,10 +98,22 @@ export function MyWorkView({
               Your projects, tasks, time, and work history.
             </p>
           </div>
-          <Button size="sm" onClick={() => setRecording(true)}>
-            <Plus aria-hidden className="h-4 w-4" />
-            Record work
-          </Button>
+          <div className="flex flex-col items-end gap-1.5">
+            <Button
+              size="sm"
+              onClick={() => setRecording(true)}
+              disabled={!canRecord}
+            >
+              <Plus aria-hidden className="h-4 w-4" />
+              Record work
+            </Button>
+            {!canRecord ? (
+              <p className="max-w-xs text-right text-xs text-dim">
+                You&apos;ll be able to record work once you&apos;re assigned to
+                a project.
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 
