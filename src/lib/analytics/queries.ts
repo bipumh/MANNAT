@@ -73,8 +73,10 @@ export async function getAnalytics(workspaceId: string): Promise<Analytics> {
     ),
     sql.query(
       `select count(*)::int as total,
-              count(*) filter (where status = 'completed')::int as completed
-       from tasks where workspace_id = $1 and archived = false`,
+              count(*) filter (where t.status = 'completed')::int as completed
+       from tasks t
+       join projects p on p.id = t.project_id and p.archived = false
+       where t.workspace_id = $1 and t.archived = false`,
       [workspaceId],
     ),
     sql.query(

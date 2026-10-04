@@ -90,6 +90,7 @@ export async function listTasks(
      ${TASK_FROM}
      where t.workspace_id = $1
        and t.archived = false
+       and p.archived = false
        and ($2::text is null or t.status = $2)
        and ($3::text is null or t.priority = $3)
        and ($4::text is null or t.project_id = $4::uuid)
@@ -128,6 +129,7 @@ export async function listAssignedTasks(
      ${TASK_FROM}
      where t.workspace_id = $1
        and t.archived = false
+       and p.archived = false
        and t.assignee_user_id = $2
        and ($3::text is null or t.status = $3)
      order by t.created_at desc`,
@@ -153,6 +155,7 @@ export async function getTask(
     `select ${TASK_SELECT}
      ${TASK_FROM}
      where t.workspace_id = $1 and t.id = $2
+       and p.archived = false
        and ($3::text is null or (
          t.assignee_user_id = $3
          or exists (

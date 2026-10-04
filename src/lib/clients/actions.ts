@@ -80,6 +80,7 @@ export async function createClientAction(
   }
 
   revalidatePath("/dashboard/clients");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -129,6 +130,7 @@ export async function updateClientAction(
 
   revalidatePath("/dashboard/clients");
   revalidatePath(`/dashboard/clients/${id}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -156,5 +158,6 @@ export async function archiveClientAction(id: string): Promise<{ ok: boolean }> 
 
   revalidatePath("/dashboard/clients");
   revalidatePath(`/dashboard/clients/${id}`);
+  revalidatePath("/dashboard");
   return { ok: true };
 }

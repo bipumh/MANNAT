@@ -83,8 +83,11 @@ export async function getDashboardOverview(
         where workspace_id = $1 and status = 'active')::int as active_clients,
        (select count(*) from projects
         where workspace_id = $1 and archived = false and status <> 'completed')::int as active_projects,
-       (select count(*) from tasks
-        where workspace_id = $1 and archived = false and status <> 'completed')::int as open_tasks,
+       (select count(*) from tasks t
+        where t.workspace_id = $1 and t.archived = false and t.status <> 'completed'
+          and exists (
+            select 1 from projects p where p.id = t.project_id and p.archived = false
+          ))::int as open_tasks,
        coalesce((select sum(duration_minutes) from time_entries
                  where workspace_id = $1 and date >= $2::date), 0)::int as tracked_minutes`,
     [workspaceId, monthStart],
@@ -204,7 +207,7 @@ export async function getDashboardTasks(
          p.name as project_name
        from tasks t
        join projects p on p.id = t.project_id
-       where t.workspace_id = $1 and t.archived = false and t.status <> 'completed'
+       where t.workspace_id = $1 and t.archived = false and p.archived = false and t.status <> 'completed'
        order by
          case when t.due_date is not null and t.due_date < current_date then 0 else 1 end,
          t.due_date asc nulls last,
@@ -214,9 +217,10 @@ export async function getDashboardTasks(
     ),
     sql.query(
       `select count(*)::int as count
-       from tasks
-       where workspace_id = $1 and archived = false and status <> 'completed'
-         and due_date is not null and due_date < current_date`,
+       from tasks t
+       join projects p on p.id = t.project_id and p.archived = false
+       where t.workspace_id = $1 and t.archived = false and t.status <> 'completed'
+         and t.due_date is not null and t.due_date < current_date`,
       [workspaceId],
     ),
   ])) as [
@@ -364,9 +368,10 @@ export async function getBusinessPulse(
     ),
     sql.query(
       `select count(*)::int as count
-       from tasks
-       where workspace_id = $1 and archived = false and status <> 'completed'
-         and due_date is not null and due_date < current_date`,
+       from tasks t
+       join projects p on p.id = t.project_id and p.archived = false
+       where t.workspace_id = $1 and t.archived = false and t.status <> 'completed'
+         and t.due_date is not null and t.due_date < current_date`,
       [workspaceId],
     ),
     sql.query(

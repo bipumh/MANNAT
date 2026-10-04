@@ -51,7 +51,7 @@ export async function getClientHealth(
         where p.client_id = c.id and p.status = 'completed') as completed_projects,
        (select count(*)::int from tasks t
         join projects p on p.id = t.project_id
-        where p.client_id = c.id and t.archived = false and t.status <> 'completed') as open_tasks,
+        where p.client_id = c.id and p.archived = false and t.archived = false and t.status <> 'completed') as open_tasks,
        (select count(*)::int from invoices i
         where i.client_id = c.id
           and (i.status = 'overdue' or (i.status = 'sent' and i.due_date < current_date))) as overdue_invoices,

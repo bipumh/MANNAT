@@ -115,6 +115,7 @@ export async function getProject(
      from projects p
      join clients c on c.id = p.client_id
      where p.workspace_id = $1 and p.id = $2
+       and p.archived = false
        and ($3::text is null or (
          exists (
            select 1 from project_members pm

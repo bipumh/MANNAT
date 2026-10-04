@@ -119,6 +119,7 @@ export async function createProjectAction(
   }
 
   revalidatePath("/dashboard/projects");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -170,6 +171,7 @@ export async function updateProjectAction(
 
   revalidatePath("/dashboard/projects");
   revalidatePath(`/dashboard/projects/${id}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -197,6 +199,7 @@ export async function archiveProjectAction(id: string): Promise<{ ok: boolean }>
 
   revalidatePath("/dashboard/projects");
   revalidatePath(`/dashboard/projects/${id}`);
+  revalidatePath("/dashboard");
   return { ok: true };
 }
 
