@@ -38,6 +38,7 @@ export default async function TaskDetailPage({
       projects={projects}
       members={members}
       canManage={manager}
+      currentUserId={user.id}
     />
   );
 }

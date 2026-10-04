@@ -31,11 +31,13 @@ export function TaskDetail({
   projects,
   members,
   canManage,
+  currentUserId,
 }: {
   task: Task;
   projects: Project[];
   members: WorkspaceMember[];
   canManage: boolean;
+  currentUserId: string;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -43,6 +45,7 @@ export function TaskDetail({
   const [confirm, setConfirm] = useState(false);
 
   const isCompleted = task.status === "completed";
+  const isAssignee = task.assigneeUserId === currentUserId;
   const clientLabel = task.clientCompany
     ? `${task.clientName} — ${task.clientCompany}`
     : task.clientName;
@@ -116,22 +119,28 @@ export function TaskDetail({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-              <Pencil aria-hidden className="h-4 w-4" />
-              Edit
-            </Button>
-            <Button size="sm" onClick={toggleComplete} disabled={busy}>
-              {isCompleted ? (
-                <RotateCcw aria-hidden className="h-4 w-4" />
-              ) : (
-                <Check aria-hidden className="h-4 w-4" />
-              )}
-              {isCompleted ? "Reopen" : "Complete"}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={archive} disabled={busy}>
-              <Trash2 aria-hidden className="h-4 w-4" />
-              Archive
-            </Button>
+            {canManage || isAssignee ? (
+              <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+                <Pencil aria-hidden className="h-4 w-4" />
+                Edit
+              </Button>
+            ) : null}
+            {canManage || isAssignee ? (
+              <Button size="sm" onClick={toggleComplete} disabled={busy}>
+                {isCompleted ? (
+                  <RotateCcw aria-hidden className="h-4 w-4" />
+                ) : (
+                  <Check aria-hidden className="h-4 w-4" />
+                )}
+                {isCompleted ? "Reopen" : "Complete"}
+              </Button>
+            ) : null}
+            {canManage ? (
+              <Button size="sm" variant="ghost" onClick={archive} disabled={busy}>
+                <Trash2 aria-hidden className="h-4 w-4" />
+                Archive
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>

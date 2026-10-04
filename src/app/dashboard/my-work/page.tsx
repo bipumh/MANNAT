@@ -17,11 +17,13 @@ export default async function MyWorkPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
+  const memberUserId = canManage(user) ? undefined : user.id;
+
   const [data, clients, allProjects, allTasks] = await Promise.all([
     getMyWork(user.workspaceId, user.id),
-    listClients(user.workspaceId),
-    listProjects(user.workspaceId),
-    listTasks(user.workspaceId),
+    listClients(user.workspaceId, { memberUserId }),
+    listProjects(user.workspaceId, { memberUserId }),
+    listTasks(user.workspaceId, { memberUserId }),
   ]);
 
   // Regular members may only record work against projects they're assigned to;
