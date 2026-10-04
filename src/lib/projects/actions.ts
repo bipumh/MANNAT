@@ -73,6 +73,9 @@ export async function createProjectAction(
 ): Promise<ProjectFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "You don't have permission to create projects." };
+  }
 
   const error = validate(input);
   if (error) return { error };
@@ -125,6 +128,9 @@ export async function updateProjectAction(
 ): Promise<ProjectFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "You don't have permission to edit projects." };
+  }
 
   const error = validate(input);
   if (error) return { error };
@@ -175,6 +181,7 @@ export async function updateProjectAction(
 export async function archiveProjectAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+  if (!canManage(user)) return { ok: false };
 
   try {
     const sql = getDb();

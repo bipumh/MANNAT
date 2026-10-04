@@ -25,9 +25,21 @@ function mapError(error: unknown): string {
 }
 
 /**
+ * Only allow same-origin, internal paths — reject protocol-relative and
+ * backslash-prefixed values that browsers would normalize into an external
+ * redirect (open redirect protection).
+ */
+function safeNextPath(next: string): string {
+  return next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")
+    ? next
+    : "/dashboard";
+}
+
+/**
  * Creates the user's profile, personal workspace and owner membership in one
- * atomic statement. Runs after a successful sign-up (the user id comes from the
- * sign-up response, never from client input).
+ * atomic statement, and marks that workspace as their active workspace. Runs
+ * after a successful sign-up (the user id comes from the sign-up response,
+ * never from client input).
  */
 async function provisionAccount(userId: string, fullName: string): Promise<void> {
   const sql = getDb();
@@ -44,9 +56,15 @@ async function provisionAccount(userId: string, fullName: string): Promise<void>
       insert into workspaces (name)
       values (${workspaceName})
       returning id
+    ), m as (
+      insert into workspace_members (workspace_id, user_id, role)
+      select w.id, p.id, 'owner' from p, w
+      returning workspace_id, user_id
     )
-    insert into workspace_members (workspace_id, user_id, role)
-    select w.id, p.id, 'owner' from p, w
+    update profiles
+    set active_workspace_id = m.workspace_id
+    from m
+    where profiles.id = m.user_id
   `;
 }
 
@@ -65,14 +83,7 @@ export async function loginAction(
   const { error } = await auth.signIn.email({ email, password });
   if (error) return { error: mapError(error) };
 
-  // Only allow same-origin, internal paths — reject protocol-relative and
-  // backslash-prefixed values that browsers would normalize into an external
-  // redirect (open redirect protection).
-  const safeNext =
-    next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")
-      ? next
-      : "/dashboard";
-  redirect(safeNext);
+  redirect(safeNextPath(next));
 }
 
 export async function signupAction(
@@ -82,6 +93,7 @@ export async function signupAction(
   const fullName = (formData.get("name") as string | null)?.trim() ?? "";
   const email = (formData.get("email") as string | null)?.trim() ?? "";
   const password = (formData.get("password") as string | null) ?? "";
+  const next = (formData.get("next") as string | null) ?? "";
 
   if (!fullName || !email || !password) {
     return { error: "Name, email and password are required." };
@@ -105,7 +117,7 @@ export async function signupAction(
     }
   }
 
-  redirect("/dashboard");
+  redirect(safeNextPath(next));
 }
 
 export async function logoutAction(): Promise<void> {

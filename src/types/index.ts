@@ -12,8 +12,6 @@ export type SessionUser = {
 
 export type DemoProjectStatus = "on-track" | "at-risk" | "completed" | "planned";
 
-export type DemoInvoiceStatus = "paid" | "pending" | "overdue" | "draft";
-
 export type TaskPriority = "low" | "medium" | "high";
 
 export type ClientStatus = "active" | "inactive";
@@ -66,16 +64,6 @@ export type Project = {
   clientCompany: string | null;
 };
 
-// Legacy demo invoice data (dashboard overview).
-export type DemoInvoice = {
-  id: string;
-  number: string;
-  client: string;
-  amount: number;
-  status: DemoInvoiceStatus;
-  issued: string;
-};
-
 // Persistent invoice (Neon PostgreSQL).
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
 
@@ -109,16 +97,6 @@ export type InvoiceItem = {
   quantity: string;
   unitRate: string;
   amount: string;
-};
-
-// Legacy demo task data (dashboard overview).
-export type DemoTask = {
-  id: string;
-  title: string;
-  project: string;
-  priority: TaskPriority;
-  due: string;
-  done: boolean;
 };
 
 // Persistent task (Neon PostgreSQL).

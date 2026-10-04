@@ -71,58 +71,54 @@ export const features: Feature[] = [
 
 export type PricingPlan = {
   name: string;
-  monthly: string;
-  annual: string;
+  price: string;
   unit: string;
   description: string;
   cta: string;
   highlighted?: boolean;
+  comingSoon?: boolean;
   features: string[];
 };
 
 export const pricingPlans: PricingPlan[] = [
   {
-    name: "Starter",
-    monthly: "$0",
-    annual: "$0",
-    unit: "per month",
-    description: "For freelancers getting organised.",
+    name: "Free",
+    price: "$0",
+    unit: "forever",
+    description: "Run your whole business — clients, projects, tasks, invoices and time.",
     cta: "Start free",
     features: [
       "Unlimited projects",
       "Unlimited tasks",
-      "Basic invoicing",
-      "Time tracking",
+      "Invoicing",
+      "Time tracking & work logs",
     ],
   },
   {
-    name: "Growth",
-    monthly: "$24",
-    annual: "$19",
-    unit: "per seat / month",
-    description: "For small teams scaling up.",
-    cta: "Start free trial",
+    name: "Pro",
+    price: "Coming soon",
+    unit: "",
+    description: "For growing teams — paid plans are on the roadmap.",
+    cta: "Coming soon",
     highlighted: true,
+    comingSoon: true,
     features: [
-      "Unlimited projects",
-      "Task tracking",
-      "Invoice from tracked time",
-      "Team roles & permissions",
-      "Analytics dashboard",
+      "Everything in Free",
+      "Advanced reporting",
+      "Priority support",
     ],
   },
   {
     name: "Scale",
-    monthly: "$49",
-    annual: "$39",
-    unit: "per seat / month",
-    description: "For agencies and growing orgs.",
-    cta: "Contact sales",
+    price: "Coming soon",
+    unit: "",
+    description: "For agencies and larger organisations.",
+    cta: "Coming soon",
+    comingSoon: true,
     features: [
-      "Everything in Growth",
+      "Everything in Pro",
       "Role-based permissions",
-      "Activity & notifications",
-      "Priority support",
+      "Dedicated support",
     ],
   },
 ];

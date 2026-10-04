@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { createWorkLogAction } from "@/lib/work-log/actions";
@@ -43,6 +44,8 @@ export function RecordWorkDialog({
   const [minutes, setMinutes] = useState("0");
   const [rate, setRate] = useState("");
   const [billable, setBillable] = useState(true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -110,6 +113,7 @@ export function RecordWorkDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div aria-hidden className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Record work"

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import {
@@ -56,6 +57,8 @@ export function TimeDialog({
 
   const noProjects = projects.length === 0;
   const projectTasks = tasks.filter((t) => t.projectId === projectId);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
 
   const durationMinutes = (Number(hours) || 0) * 60 + (Number(minutes) || 0);
   const amount =
@@ -107,6 +110,7 @@ export function TimeDialog({
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={isEdit ? "Edit time entry" : "Log time"}

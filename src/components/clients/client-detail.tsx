@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
-import { ClientStatusBadge, InvoiceStatusBadge } from "@/components/dashboard/status";
+import { ClientStatusBadge, InvoiceStatusBadge, ProjectStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClientDialog } from "@/components/clients/client-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
@@ -39,18 +39,21 @@ export function ClientDetail({
   clients,
   projects,
   workLogs,
+  canManage,
 }: {
   client: Client;
   invoices: Invoice[];
   clients: Client[];
   projects: Project[];
   workLogs: WorkLog[];
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [newInvoice, setNewInvoice] = useState(false);
 
   const hasContact = Boolean(client.email || client.phone || client.website);
+  const clientProjects = projects.filter((project) => project.clientId === client.id);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -86,13 +89,14 @@ export function ClientDetail({
               </div>
             </div>
           </div>
-          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden className="h-4 w-4" />
-            Edit
-          </Button>
+          {canManage ? (
+            <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="h-4 w-4" />
+              Edit
+            </Button>
+          ) : null}
         </div>
       </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
         <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader title="Contact" />
@@ -155,31 +159,68 @@ export function ClientDetail({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
-          <PanelHeader title="Projects" />
-          <EmptyState
-            icon={FolderKanban}
-            title="No projects yet"
-            description="Projects will be connected to this client in a future update."
+          <PanelHeader
+            title="Projects"
+            description={
+              clientProjects.length > 0
+                ? `${clientProjects.length} ${
+                    clientProjects.length === 1 ? "project" : "projects"
+                  }`
+                : undefined
+            }
           />
+          {clientProjects.length === 0 ? (
+            <EmptyState
+              icon={FolderKanban}
+              title="No projects yet"
+              description="Projects you create for this client will appear here."
+            />
+          ) : (
+            <ul className="divide-y divide-line">
+              {clientProjects.map((project) => (
+                <li
+                  key={project.id}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <Link
+                    href={`/dashboard/projects/${project.id}`}
+                    className="min-w-0 flex-1"
+                  >
+                    <p className="truncate text-sm font-medium text-foreground transition-colors hover:text-primary-bright">
+                      {project.name}
+                    </p>
+                    {project.dueDate ? (
+                      <p className="text-xs text-dim">
+                        Due {formatDateShort(project.dueDate)}
+                      </p>
+                    ) : null}
+                  </Link>
+                  <ProjectStatusBadge status={project.status} />
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
 
         <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader
             title="Invoices"
             action={
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/dashboard/invoices?client=${client.id}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
-                >
-                  View all
-                  <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
-                </Link>
-                <Button size="sm" onClick={() => setNewInvoice(true)}>
-                  <Plus aria-hidden className="h-4 w-4" />
-                  New invoice
-                </Button>
-              </div>
+              canManage ? (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/dashboard/invoices?client=${client.id}`}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
+                  >
+                    View all
+                    <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+                  </Link>
+                  <Button size="sm" onClick={() => setNewInvoice(true)}>
+                    <Plus aria-hidden className="h-4 w-4" />
+                    New invoice
+                  </Button>
+                </div>
+              ) : undefined
             }
           />
 

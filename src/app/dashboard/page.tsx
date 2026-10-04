@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { BarChart3, Download, Plus } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import {
   getBusinessPulse,
   getDashboardActivity,
@@ -11,12 +12,13 @@ import {
   getDashboardRevenue,
   getDashboardTasks,
 } from "@/lib/dashboard/queries";
-import { Button } from "@/components/ui/button";
 import { formatCurrencyPrecise } from "@/lib/format";
+import { listClients } from "@/lib/clients/queries";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_EMERALD } from "@/components/dashboard/spotlight";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DashboardReveal } from "@/components/dashboard/dashboard-reveal";
+import { NewProjectButton } from "@/components/dashboard/new-project-button";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
 import { BusinessPulse } from "@/components/dashboard/business-pulse";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
@@ -33,8 +35,12 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (!canManage(user)) redirect("/dashboard/my-work");
 
   const firstName = user.fullName.split(" ")[0] || user.fullName;
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   const [
     overview,
@@ -44,6 +50,7 @@ export default async function DashboardPage() {
     tasks,
     invoicesData,
     activityEvents,
+    clients,
   ] = await Promise.all([
     getDashboardOverview(user.workspaceId),
     getBusinessPulse(user.workspaceId),
@@ -52,6 +59,7 @@ export default async function DashboardPage() {
     getDashboardTasks(user.workspaceId, 5),
     getDashboardInvoices(user.workspaceId, 5),
     getDashboardActivity(user.workspaceId, 6),
+    listClients(user.workspaceId),
   ]);
 
   const hasRevenue = revenueData.some((point) => point.revenue > 0);
@@ -70,21 +78,14 @@ export default async function DashboardPage() {
                 Workspace overview
               </p>
               <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                Good morning, {firstName}
+                {greeting}, {firstName}
               </h1>
               <p className="mt-2 max-w-lg text-sm text-muted">
                 Here&apos;s what&apos;s happening at {user.workspaceName} today.
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="surface" size="sm">
-                <Download aria-hidden className="h-4 w-4" />
-                Export
-              </Button>
-              <Button size="sm">
-                <Plus aria-hidden className="h-4 w-4" />
-                New project
-              </Button>
+              <NewProjectButton clients={clients} />
             </div>
           </div>
         </div>

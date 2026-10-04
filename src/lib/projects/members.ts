@@ -49,8 +49,9 @@ export async function listProjectMembers(
 }
 
 /**
- * Lists the active projects a given member is assigned to (used by My Work).
- * Scoped to the workspace.
+ * Lists the active projects a given member has assignment-based access to
+ * (project membership or an assigned task), used by My Work. Scoped to the
+ * workspace.
  */
 export async function listAssignedProjects(
   workspaceId: string,
@@ -62,10 +63,19 @@ export async function listAssignedProjects(
        p.id, p.workspace_id, p.client_id, p.name, p.description, p.status, p.priority,
        p.start_date, p.due_date, p.budget, p.archived, p.created_at, p.updated_at,
        c.name as client_name, c.company as client_company
-     from project_members pm
-     join projects p on p.id = pm.project_id
+     from projects p
      join clients c on c.id = p.client_id
-     where pm.workspace_id = $1 and pm.user_id = $2 and p.archived = false
+     where p.workspace_id = $1 and p.archived = false
+       and (
+         exists (
+           select 1 from project_members pm
+           where pm.project_id = p.id and pm.user_id = $2
+         )
+         or exists (
+           select 1 from tasks t
+           where t.project_id = p.id and t.assignee_user_id = $2
+         )
+       )
      order by p.created_at desc`,
     [workspaceId, userId],
   )) as {

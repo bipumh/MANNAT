@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { Badge } from "@/components/ui/badge";
@@ -36,17 +37,22 @@ export function TimeDetail({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(false);
 
   const amount = entryAmount(entry);
   const clientLabel = entry.clientCompany
     ? `${entry.clientName} — ${entry.clientCompany}`
     : entry.clientName;
 
-  async function remove() {
-    if (!window.confirm(`Delete this time entry?`)) return;
+  function remove() {
+    setConfirm(true);
+  }
+
+  async function confirmDelete() {
     setBusy(true);
     await deleteTimeEntryAction(entry.id);
     setBusy(false);
+    setConfirm(false);
     router.push("/dashboard/time");
     router.refresh();
   }
@@ -181,6 +187,17 @@ export function TimeDetail({
             setEditing(false);
             router.refresh();
           }}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Delete time entry"
+          description="Delete this time entry? This can't be undone."
+          confirmLabel="Delete"
+          pending={busy}
+          onConfirm={confirmDelete}
+          onClose={() => setConfirm(false)}
         />
       ) : null}
     </div>

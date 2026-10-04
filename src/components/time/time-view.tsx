@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { FileText, Plus, Search, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Toast } from "@/components/ui/toast";
 import { Panel } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -44,6 +46,7 @@ export function TimeView({
   projectId,
   taskId,
   billable,
+  canManage,
 }: {
   entries: TimeEntry[];
   projects: Project[];
@@ -53,6 +56,7 @@ export function TimeView({
   projectId?: string;
   taskId?: string;
   billable?: boolean;
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
@@ -63,6 +67,7 @@ export function TimeView({
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<TimeEntry | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -98,19 +103,16 @@ export function TimeView({
     router.refresh();
   }
 
-  async function remove(entry: TimeEntry) {
-    if (
-      !window.confirm(
-        `Delete this ${formatDate(entry.date)} time entry (${formatDuration(
-          entry.durationMinutes,
-        )})?`,
-      )
-    ) {
-      return;
-    }
-    setBusyId(entry.id);
-    await deleteTimeEntryAction(entry.id);
+  function remove(entry: TimeEntry) {
+    setConfirm(entry);
+  }
+
+  async function confirmDelete() {
+    if (!confirm) return;
+    setBusyId(confirm.id);
+    await deleteTimeEntryAction(confirm.id);
     setBusyId(null);
+    setConfirm(null);
     setNotice("Time entry deleted");
     router.refresh();
   }
@@ -157,14 +159,16 @@ export function TimeView({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="surface"
-              onClick={() => setInvoiceOpen(true)}
-            >
-              <FileText aria-hidden className="h-4 w-4" />
-              Invoice time
-            </Button>
+            {canManage ? (
+              <Button
+                size="sm"
+                variant="surface"
+                onClick={() => setInvoiceOpen(true)}
+              >
+                <FileText aria-hidden className="h-4 w-4" />
+                Invoice time
+              </Button>
+            ) : null}
             <Button size="sm" onClick={openCreate}>
               <Plus aria-hidden className="h-4 w-4" />
               Log time
@@ -185,7 +189,7 @@ export function TimeView({
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search time, projects or tasks…"
             aria-label="Search time entries"
-            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </div>
 
@@ -214,7 +218,7 @@ export function TimeView({
             aria-label="Filter by project"
             value={projectId ?? ""}
             onChange={(event) => navigate("project", event.target.value)}
-            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="">All projects</option>
             {projects.map((project) => (
@@ -228,7 +232,7 @@ export function TimeView({
             aria-label="Filter by task"
             value={taskId ?? ""}
             onChange={(event) => navigate("task", event.target.value)}
-            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="">All tasks</option>
             {tasks.map((task) => (
@@ -240,11 +244,7 @@ export function TimeView({
         </div>
       </div>
 
-      {notice ? (
-        <p className="text-sm text-primary-bright" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <Toast message={notice} />
 
       {projects.length === 0 ? (
         <EmptyState
@@ -343,7 +343,7 @@ export function TimeView({
                         )}
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -460,6 +460,19 @@ export function TimeView({
             setNotice("Invoice created");
             router.refresh();
           }}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Delete time entry"
+          description={`Delete this ${formatDate(confirm.date)} entry (${formatDuration(
+            confirm.durationMinutes,
+          )})? This can't be undone.`}
+          confirmLabel="Delete"
+          pending={busyId === confirm.id}
+          onConfirm={confirmDelete}
+          onClose={() => setConfirm(null)}
         />
       ) : null}
     </div>

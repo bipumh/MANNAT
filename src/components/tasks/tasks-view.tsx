@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Toast } from "@/components/ui/toast";
 import { Panel } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { TaskPriorityBadge, TaskStatusBadge } from "@/components/dashboard/status";
@@ -60,6 +62,7 @@ export function TasksView({
   status,
   priority,
   projectId,
+  canManage,
 }: {
   tasks: Task[];
   projects: Project[];
@@ -67,6 +70,7 @@ export function TasksView({
   status?: TaskStatus;
   priority?: TaskPriority;
   projectId?: string;
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
@@ -76,6 +80,7 @@ export function TasksView({
   });
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<Task | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -122,11 +127,16 @@ export function TasksView({
     router.refresh();
   }
 
-  async function archive(task: Task) {
-    if (!window.confirm(`Archive "${task.title}"?`)) return;
-    setBusyId(task.id);
-    await archiveTaskAction(task.id);
+  function archive(task: Task) {
+    setConfirm(task);
+  }
+
+  async function confirmArchive() {
+    if (!confirm) return;
+    setBusyId(confirm.id);
+    await archiveTaskAction(confirm.id);
     setBusyId(null);
+    setConfirm(null);
     setNotice("Task archived");
     router.refresh();
   }
@@ -170,10 +180,12 @@ export function TasksView({
               Track the work behind your projects, one task at a time.
             </p>
           </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus aria-hidden className="h-4 w-4" />
-            New task
-          </Button>
+          {canManage ? (
+            <Button size="sm" onClick={openCreate}>
+              <Plus aria-hidden className="h-4 w-4" />
+              New task
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -189,7 +201,7 @@ export function TasksView({
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search tasks or projects…"
             aria-label="Search tasks"
-            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </div>
 
@@ -238,7 +250,7 @@ export function TasksView({
             aria-label="Filter by project"
             value={projectId ?? ""}
             onChange={(event) => onProjectChange(event.target.value)}
-            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="">All projects</option>
             {projects.map((project) => (
@@ -250,11 +262,7 @@ export function TasksView({
         </div>
       </div>
 
-      {notice ? (
-        <p className="text-sm text-primary-bright" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <Toast message={notice} />
 
       {projects.length === 0 ? (
         <EmptyState
@@ -366,7 +374,7 @@ export function TasksView({
                         {due?.label ?? "—"}
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -374,14 +382,16 @@ export function TasksView({
                           >
                             Edit
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => archive(task)}
-                            disabled={busyId === task.id}
-                          >
-                            Archive
-                          </Button>
+                          {canManage ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => archive(task)}
+                              disabled={busyId === task.id}
+                            >
+                              Archive
+                            </Button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -459,14 +469,16 @@ export function TasksView({
                     >
                       Edit
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => archive(task)}
-                      disabled={busyId === task.id}
-                    >
-                      Archive
-                    </Button>
+                    {canManage ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => archive(task)}
+                        disabled={busyId === task.id}
+                      >
+                        Archive
+                      </Button>
+                    ) : null}
                   </div>
                 </Panel>
               );
@@ -481,6 +493,17 @@ export function TasksView({
           projects={projects}
           onClose={() => setDialog({ open: false, task: null })}
           onSaved={onSaved}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Archive task"
+          description={`Archive "${confirm.title}"? It will be hidden from your task list.`}
+          confirmLabel="Archive"
+          pending={busyId === confirm.id}
+          onConfirm={confirmArchive}
+          onClose={() => setConfirm(null)}
         />
       ) : null}
     </div>

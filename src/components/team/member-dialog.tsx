@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { inviteMemberAction } from "@/lib/team/actions";
@@ -18,6 +19,9 @@ export function MemberDialog({
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -45,7 +49,10 @@ export function MemberDialog({
       setError(result.error);
     } else if (result.inviteUrl) {
       setInviteUrl(result.inviteUrl);
+      setEmailSent(Boolean(result.emailSent));
       onSaved();
+    } else {
+      setError("Something went wrong. Please try again.");
     }
   }
 
@@ -70,6 +77,7 @@ export function MemberDialog({
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Invite member"
@@ -97,8 +105,9 @@ export function MemberDialog({
         {inviteUrl ? (
           <div className="mt-6 space-y-4">
             <div className="rounded-lg border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-foreground">
-              Invitation created. No email was sent yet — share this link with
-              your teammate so they can join.
+              {emailSent
+                ? "Invitation sent by email. You can also share the link below directly."
+                : "Invitation created. Copy the link below and share it with your teammate to invite them."}
             </div>
 
             <div className="rounded-lg border border-line bg-surface-2 p-3">

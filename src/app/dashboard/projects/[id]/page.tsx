@@ -9,7 +9,7 @@ import { listClients } from "@/lib/clients/queries";
 import { listTasks } from "@/lib/tasks/queries";
 import { listInvoices } from "@/lib/invoices/queries";
 import { listWorkspaceMembers } from "@/lib/team/queries";
-import { listWorkLogsByProject } from "@/lib/work-log/queries";
+import { listWorkLogs } from "@/lib/work-log/queries";
 import { ProjectDetail } from "@/components/projects/project-detail";
 
 export const metadata: Metadata = {
@@ -26,7 +26,10 @@ export default async function ProjectDetailPage({
   if (!user) redirect("/login");
 
   const { id } = await params;
-  const project = await getProject(user.workspaceId, id);
+  const manager = canManage(user);
+  const memberUserId = manager ? undefined : user.id;
+
+  const project = await getProject(user.workspaceId, id, memberUserId);
   if (!project) notFound();
 
   const [
@@ -39,14 +42,14 @@ export default async function ProjectDetailPage({
     allMembers,
     workLogs,
   ] = await Promise.all([
-    listClients(user.workspaceId),
-    listProjects(user.workspaceId),
-    listTasks(user.workspaceId, { projectId: id }),
-    listInvoices(user.workspaceId, { projectId: id }),
-    getProjectProfitability(user.workspaceId, id),
+    listClients(user.workspaceId, { memberUserId }),
+    listProjects(user.workspaceId, { memberUserId }),
+    listTasks(user.workspaceId, { projectId: id, memberUserId }),
+    manager ? listInvoices(user.workspaceId, { projectId: id }) : Promise.resolve([]),
+    manager ? getProjectProfitability(user.workspaceId, id) : Promise.resolve(null),
     listProjectMembers(user.workspaceId, id),
-    listWorkspaceMembers(user.workspaceId),
-    listWorkLogsByProject(user.workspaceId, id),
+    manager ? listWorkspaceMembers(user.workspaceId) : Promise.resolve([]),
+    listWorkLogs(user.workspaceId, { projectId: id, userId: memberUserId }),
   ]);
 
   return (
@@ -59,7 +62,7 @@ export default async function ProjectDetailPage({
       profitability={profitability}
       assignedMembers={assignedMembers}
       allMembers={allMembers}
-      canManage={canManage(user)}
+      canManage={manager}
       workLogs={workLogs}
     />
   );

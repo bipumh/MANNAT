@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { createInvoiceAction, updateInvoiceAction } from "@/lib/invoices/actions";
-import { budgetToInput } from "@/lib/format";
+import { budgetToInput, formatCurrencyPrecise } from "@/lib/format";
 import type { Client, Invoice, InvoiceStatus, Project } from "@/types";
 
 function localToday(): string {
@@ -47,6 +48,8 @@ export function InvoiceDialog({
   const noClients = clients.length === 0;
   const clientProjects = projects.filter((p) => p.clientId === clientId);
   const total = (Number(subtotal) || 0) + (Number(tax) || 0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -93,6 +96,7 @@ export function InvoiceDialog({
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={isEdit ? "Edit invoice" : "New invoice"}
@@ -232,7 +236,7 @@ export function InvoiceDialog({
             <div className="flex items-center justify-between rounded-lg border border-line bg-surface-2 px-4 py-3">
               <span className="text-sm text-muted">Total</span>
               <span className="font-display text-lg font-semibold text-foreground">
-                {`$${total.toFixed(2)}`}
+                {formatCurrencyPrecise(total)}
               </span>
             </div>
 

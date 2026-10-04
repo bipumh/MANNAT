@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import { listTasks } from "@/lib/tasks/queries";
 import { listProjects } from "@/lib/projects/queries";
 import { TasksView } from "@/components/tasks/tasks-view";
@@ -33,9 +34,11 @@ export default async function TasksPage({
       : undefined;
   const projectId = typeof sp.project === "string" ? sp.project : undefined;
 
+  const memberUserId = canManage(user) ? undefined : user.id;
+
   const [tasks, projects] = await Promise.all([
-    listTasks(user.workspaceId, { q, status, priority, projectId }),
-    listProjects(user.workspaceId),
+    listTasks(user.workspaceId, { q, status, priority, projectId, memberUserId }),
+    listProjects(user.workspaceId, { memberUserId }),
   ]);
 
   return (
@@ -46,6 +49,7 @@ export default async function TasksPage({
       status={status}
       priority={priority}
       projectId={projectId}
+      canManage={canManage(user)}
     />
   );
 }

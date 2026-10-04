@@ -1,8 +1,6 @@
 import type {
   Activity,
-  DemoInvoice,
   DemoProject,
-  DemoTask,
   RevenuePoint,
 } from "@/types";
 
@@ -109,92 +107,6 @@ export const projects: DemoProject[] = [
     progress: 0,
     due: "2026-12-05",
     team: ["MK"],
-  },
-];
-
-export const invoices: DemoInvoice[] = [
-  {
-    id: "i1",
-    number: "INV-2041",
-    client: "Lumen & Co.",
-    amount: 12400,
-    status: "paid",
-    issued: "2026-09-24",
-  },
-  {
-    id: "i2",
-    number: "INV-2042",
-    client: "Northwind Labs",
-    amount: 8900,
-    status: "pending",
-    issued: "2026-09-21",
-  },
-  {
-    id: "i3",
-    number: "INV-2043",
-    client: "Kite Health",
-    amount: 6300,
-    status: "overdue",
-    issued: "2026-09-08",
-  },
-  {
-    id: "i4",
-    number: "INV-2044",
-    client: "Ferrum Finance",
-    amount: 4800,
-    status: "paid",
-    issued: "2026-09-15",
-  },
-  {
-    id: "i5",
-    number: "INV-2045",
-    client: "Aster Retail",
-    amount: 7250,
-    status: "draft",
-    issued: "2026-09-26",
-  },
-];
-
-export const tasks: DemoTask[] = [
-  {
-    id: "t1",
-    title: "Finalise homepage wireframes",
-    project: "Atlas rebrand",
-    priority: "high",
-    due: "2026-09-28",
-    done: false,
-  },
-  {
-    id: "t2",
-    title: "Review checkout flow",
-    project: "Commerce platform",
-    priority: "high",
-    due: "2026-09-29",
-    done: false,
-  },
-  {
-    id: "t3",
-    title: "Prepare sprint retro notes",
-    project: "Mobile app MVP",
-    priority: "medium",
-    due: "2026-09-30",
-    done: false,
-  },
-  {
-    id: "t4",
-    title: "Send September invoices",
-    project: "Operations",
-    priority: "medium",
-    due: "2026-09-27",
-    done: true,
-  },
-  {
-    id: "t5",
-    title: "Update onboarding docs",
-    project: "Operations",
-    priority: "low",
-    due: "2026-10-03",
-    done: false,
   },
 ];
 

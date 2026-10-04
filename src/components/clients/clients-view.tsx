@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowUpRight, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Toast } from "@/components/ui/toast";
 import { Panel } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { ClientStatusBadge } from "@/components/dashboard/status";
@@ -33,10 +35,12 @@ export function ClientsView({
   clients,
   query,
   status,
+  canManage,
 }: {
   clients: Client[];
   query: string;
   status?: ClientStatus;
+  canManage: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
@@ -46,6 +50,7 @@ export function ClientsView({
   });
   const [notice, setNotice] = useState<string | null>(null);
   const [archiving, setArchiving] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<Client | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -79,11 +84,16 @@ export function ClientsView({
     router.refresh();
   }
 
-  async function archive(client: Client) {
-    if (!window.confirm(`Archive "${client.name}"?`)) return;
-    setArchiving(client.id);
-    await archiveClientAction(client.id);
+  function archive(client: Client) {
+    setConfirm(client);
+  }
+
+  async function confirmArchive() {
+    if (!confirm) return;
+    setArchiving(confirm.id);
+    await archiveClientAction(confirm.id);
     setArchiving(null);
+    setConfirm(null);
     setNotice("Client archived");
     router.refresh();
   }
@@ -116,17 +126,21 @@ export function ClientsView({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/clients/health"
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
-            >
-              Client health
-              <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
-            </Link>
-            <Button size="sm" onClick={openCreate}>
-              <Plus aria-hidden className="h-4 w-4" />
-              New client
-            </Button>
+            {canManage ? (
+              <>
+                <Link
+                  href="/dashboard/clients/health"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-bright"
+                >
+                  Client health
+                  <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+                </Link>
+                <Button size="sm" onClick={openCreate}>
+                  <Plus aria-hidden className="h-4 w-4" />
+                  New client
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -143,7 +157,7 @@ export function ClientsView({
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search clients…"
             aria-label="Search clients"
-            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </div>
 
@@ -168,11 +182,7 @@ export function ClientsView({
         </div>
       </div>
 
-      {notice ? (
-        <p className="text-sm text-primary-bright" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <Toast message={notice} />
 
       {clients.length === 0 ? (
         query || status ? (
@@ -183,12 +193,18 @@ export function ClientsView({
         ) : (
           <EmptyState
             title="No clients yet"
-            description="Add your first client to start organizing projects, tasks, and invoices in one workspace."
+            description={
+              canManage
+                ? "Add your first client to start organizing projects, tasks, and invoices in one workspace."
+                : "Clients you work on will appear here once you're assigned to a project."
+            }
             action={
-              <Button onClick={openCreate}>
-                <Plus aria-hidden className="h-4 w-4" />
-                Add client
-              </Button>
+              canManage ? (
+                <Button onClick={openCreate}>
+                  <Plus aria-hidden className="h-4 w-4" />
+                  Add client
+                </Button>
+              ) : undefined
             }
           />
         )
@@ -208,7 +224,9 @@ export function ClientsView({
                   <th className="px-4 py-3">Phone</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Created</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  {canManage ? (
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -250,25 +268,27 @@ export function ClientsView({
                     <td className="px-4 py-3.5 text-muted">
                       {formatDate(client.createdAt)}
                     </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEdit(client)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => archive(client)}
-                          disabled={archiving === client.id}
-                        >
-                          Archive
-                        </Button>
-                      </div>
-                    </td>
+                    {canManage ? (
+                      <td className="px-4 py-3.5">
+                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEdit(client)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => archive(client)}
+                            disabled={archiving === client.id}
+                          >
+                            Archive
+                          </Button>
+                        </div>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -316,23 +336,25 @@ export function ClientsView({
                   <span className="text-xs text-dim">
                     Added {formatDate(client.createdAt)}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(client)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => archive(client)}
-                      disabled={archiving === client.id}
-                    >
-                      Archive
-                    </Button>
-                  </div>
+                  {canManage ? (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(client)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => archive(client)}
+                        disabled={archiving === client.id}
+                      >
+                        Archive
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               </Panel>
             ))}
@@ -345,6 +367,17 @@ export function ClientsView({
           client={dialog.client}
           onClose={() => setDialog({ open: false, client: null })}
           onSaved={onSaved}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Archive client"
+          description={`Archive "${confirm.name}"? Their projects and history stay intact, but the client will be hidden from your active list.`}
+          confirmLabel="Archive"
+          pending={archiving === confirm.id}
+          onConfirm={confirmArchive}
+          onClose={() => setConfirm(null)}
         />
       ) : null}
     </div>

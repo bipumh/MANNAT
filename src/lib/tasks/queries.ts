@@ -75,6 +75,7 @@ export async function listTasks(
     status?: TaskStatus;
     priority?: TaskPriority;
     projectId?: string;
+    memberUserId?: string;
   } = {},
 ): Promise<Task[]> {
   const sql = getDb();
@@ -82,6 +83,7 @@ export async function listTasks(
   const status = opts.status ?? null;
   const priority = opts.priority ?? null;
   const projectId = opts.projectId ?? null;
+  const memberUserId = opts.memberUserId ?? null;
 
   const rows = (await sql.query(
     `select ${TASK_SELECT}
@@ -95,8 +97,15 @@ export async function listTasks(
             or t.title ilike $5
             or t.description ilike $5
             or p.name ilike $5)
+       and ($6::text is null or (
+         t.assignee_user_id = $6
+         or exists (
+           select 1 from project_members pm
+           where pm.project_id = t.project_id and pm.user_id = $6
+         )
+       ))
      order by t.created_at desc`,
-    [workspaceId, status, priority, projectId, term],
+    [workspaceId, status, priority, projectId, term, memberUserId],
   )) as TaskRow[];
 
   return rows.map(mapTask);
@@ -136,6 +145,7 @@ export async function listAssignedTasks(
 export async function getTask(
   workspaceId: string,
   taskId: string,
+  memberUserId?: string,
 ): Promise<Task | null> {
   const sql = getDb();
 
@@ -143,8 +153,15 @@ export async function getTask(
     `select ${TASK_SELECT}
      ${TASK_FROM}
      where t.workspace_id = $1 and t.id = $2
+       and ($3::text is null or (
+         t.assignee_user_id = $3
+         or exists (
+           select 1 from project_members pm
+           where pm.project_id = t.project_id and pm.user_id = $3
+         )
+       ))
      limit 1`,
-    [workspaceId, taskId],
+    [workspaceId, taskId, memberUserId ?? null],
   )) as TaskRow[];
 
   return rows[0] ? mapTask(rows[0]) : null;

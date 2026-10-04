@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
 import { notifyOwnersAndAdmins } from "@/lib/notifications/notify";
+import { canManage } from "@/lib/auth/roles";
 import type { InvoiceStatus } from "@/types";
 
 export type InvoiceFormState = {
@@ -119,6 +120,9 @@ export async function createInvoiceAction(
 ): Promise<InvoiceFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "Only owners and admins can create invoices." };
+  }
 
   const error = validate(input);
   if (error) return { error };
@@ -193,6 +197,9 @@ export async function updateInvoiceAction(
 ): Promise<InvoiceFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "Only owners and admins can edit invoices." };
+  }
 
   const error = validate(input);
   if (error) return { error };
@@ -277,6 +284,7 @@ async function logInvoiceStatusChange(
 ): Promise<boolean> {
   const user = await getSessionUser();
   if (!user) return false;
+  if (!canManage(user)) return false;
 
   const sql = getDb();
   const invoiceRows = await sql`
@@ -361,6 +369,7 @@ export async function markInvoiceOverdueAction(id: string): Promise<{ ok: boolea
 export async function cancelInvoiceAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+  if (!canManage(user)) return { ok: false };
 
   try {
     const sql = getDb();

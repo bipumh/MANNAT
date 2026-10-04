@@ -6,6 +6,8 @@ import { Trash2, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Toast } from "@/components/ui/toast";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { RoleBadge } from "@/components/dashboard/status";
@@ -38,6 +40,7 @@ export function TeamView({
   const [inviting, setInviting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<WorkspaceMember | null>(null);
 
   const canManage =
     currentUser.role === "owner" || currentUser.role === "admin";
@@ -71,17 +74,16 @@ export function TeamView({
     router.refresh();
   }
 
-  async function remove(member: WorkspaceMember) {
-    if (
-      !window.confirm(
-        `Remove ${member.fullName} from this workspace?`,
-      )
-    ) {
-      return;
-    }
-    setBusyId(member.id);
-    const result = await removeMemberAction(member.id);
+  function remove(member: WorkspaceMember) {
+    setConfirm(member);
+  }
+
+  async function confirmRemove() {
+    if (!confirm) return;
+    setBusyId(confirm.id);
+    const result = await removeMemberAction(confirm.id);
     setBusyId(null);
+    setConfirm(null);
     if (result.error) setNotice(result.error);
     router.refresh();
   }
@@ -123,11 +125,7 @@ export function TeamView({
         </div>
       </div>
 
-      {notice ? (
-        <p className="text-sm text-red-300" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <Toast message={notice} tone="error" />
 
       <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader title="Members" />
@@ -295,7 +293,7 @@ export function TeamView({
         <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
           <PanelHeader
             title="Pending invitations"
-            description="Share the invite link with your teammates. No email is sent in this phase."
+            description="Copy the invite link and share it with your teammate to invite them."
           />
 
           {invitations.length === 0 ? (
@@ -345,9 +343,19 @@ export function TeamView({
         <MemberDialog
           onClose={() => setInviting(false)}
           onSaved={() => {
-            setInviting(false);
             router.refresh();
           }}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Remove member"
+          description={`Remove ${confirm.fullName} from this workspace? They'll lose access to this workspace's projects, tasks and invoices.`}
+          confirmLabel="Remove"
+          pending={busyId === confirm.id}
+          onConfirm={confirmRemove}
+          onClose={() => setConfirm(null)}
         />
       ) : null}
     </div>

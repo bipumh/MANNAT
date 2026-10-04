@@ -116,6 +116,7 @@ export async function listTimeEntries(
 export async function getTimeEntry(
   workspaceId: string,
   timeEntryId: string,
+  memberUserId?: string,
 ): Promise<TimeEntry | null> {
   const sql = getDb();
 
@@ -123,8 +124,9 @@ export async function getTimeEntry(
     `select ${TIME_ENTRY_SELECT}
      ${TIME_ENTRY_FROM}
      where t.workspace_id = $1 and t.id = $2
+       and ($3::text is null or t.user_id = $3)
      limit 1`,
-    [workspaceId, timeEntryId],
+    [workspaceId, timeEntryId, memberUserId ?? null],
   )) as TimeEntryRow[];
 
   return rows[0] ? mapTimeEntry(rows[0]) : null;

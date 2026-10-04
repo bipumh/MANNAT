@@ -5,6 +5,8 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
 import { notifyOwnersAndAdmins } from "@/lib/notifications/notify";
+import { canManage } from "@/lib/auth/roles";
+import { isMemberAssignedToProject, isMemberAssignedToTask } from "@/lib/auth/scope";
 
 export type WorkLogFormState = {
   error?: string;
@@ -83,6 +85,13 @@ export async function createWorkLogAction(
     return { error: "Selected project does not belong to the selected client." };
   }
 
+  if (
+    !canManage(user) &&
+    !(await isMemberAssignedToProject(user.workspaceId, user.id, input.projectId))
+  ) {
+    return { error: "You can only record work on projects you're assigned to." };
+  }
+
   if (input.taskId) {
     const taskRows = await sql`
       select id from tasks
@@ -92,6 +101,13 @@ export async function createWorkLogAction(
       limit 1
     `;
     if (taskRows.length === 0) return { error: "Selected task not found." };
+
+    if (
+      !canManage(user) &&
+      !(await isMemberAssignedToTask(user.workspaceId, user.id, input.taskId))
+    ) {
+      return { error: "You can only record work against tasks you're assigned to." };
+    }
   }
 
   let workLogId: string;

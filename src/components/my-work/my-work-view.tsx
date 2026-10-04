@@ -65,8 +65,14 @@ export function MyWorkView({
     { label: "Active projects", value: String(data.projects.length) },
     { label: "Open tasks", value: String(openTasks.length) },
     { label: "Overdue tasks", value: String(overdueTasks.length) },
-    { label: "Tracked time", value: formatDuration(data.trackedMinutes) },
-    { label: "Billable time", value: formatDuration(data.billableMinutes) },
+    {
+      label: "Tracked time",
+      value: data.trackedMinutes > 0 ? formatDuration(data.trackedMinutes) : "—",
+    },
+    {
+      label: "Billable time",
+      value: data.billableMinutes > 0 ? formatDuration(data.billableMinutes) : "—",
+    },
   ];
 
   return (

@@ -5,8 +5,6 @@ import { Reveal } from "@/components/shared/reveal";
 import { DashboardPreview } from "@/components/landing/dashboard-preview";
 import { LiquidSurface } from "@/components/visual/liquid-surface";
 
-const trustedBy = ["Northwind", "Lumen & Co.", "Kite Health", "Ferrum", "Aster"];
-
 export function Hero() {
   return (
     <section className="relative flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden">
@@ -51,24 +49,14 @@ export function Hero() {
               </Button>
             </div>
             <p className="mt-4 text-xs text-faint">
-              Free 14-day trial · No credit card required
+              Free forever · No credit card required
             </p>
           </Reveal>
 
           <Reveal delay={0.22}>
-            <div className="mt-10 flex flex-col items-center gap-3">
-              <p className="text-xs text-faint">Trusted by 2,000+ teams</p>
-              <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2">
-                {trustedBy.map((name) => (
-                  <span
-                    key={name}
-                    className="font-display text-sm font-semibold tracking-tight text-dim"
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <p className="mx-auto mt-10 max-w-md text-sm text-dim">
+              Built for teams that want their work in one place.
+            </p>
           </Reveal>
         </div>
 
@@ -78,10 +66,6 @@ export function Hero() {
             className="absolute -inset-x-8 -top-12 bottom-0 rounded-[2rem] bg-gradient-to-b from-primary/10 to-transparent blur-2xl"
           />
           <div className="relative">
-            <span className="absolute -top-3 right-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-2.5 py-1 text-[11px] font-medium text-muted shadow-soft">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Live preview
-            </span>
             <DashboardPreview />
           </div>
           <div className="mt-7 flex justify-center">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import {
   listPendingInvitations,
   listWorkspaceMembers,
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 export default async function TeamPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (!canManage(user)) redirect("/dashboard/my-work");
 
   const [members, invitations] = await Promise.all([
     listWorkspaceMembers(user.workspaceId),

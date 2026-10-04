@@ -8,7 +8,6 @@ import {
   BarChart3,
   Briefcase,
   CheckSquare,
-  ChevronsUpDown,
   FileText,
   FolderKanban,
   LayoutDashboard,
@@ -24,16 +23,22 @@ import { logoutAction } from "@/lib/auth/actions";
 import type { SessionUser, WorkspaceRole } from "@/types";
 import { cn } from "@/lib/cn";
 
-type NavItem = { label: string; href: string; icon: LucideIcon; count?: number };
+type NavItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  count?: number;
+  managerOnly?: boolean;
+};
 type NavSection = { label?: string; items: NavItem[] };
 
 const sections: NavSection[] = [
   {
     items: [
       { label: "My Work", href: "/dashboard/my-work", icon: Briefcase },
-      { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Activity", href: "/dashboard/activity", icon: Activity },
-      { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+      { label: "Overview", href: "/dashboard", icon: LayoutDashboard, managerOnly: true },
+      { label: "Activity", href: "/dashboard/activity", icon: Activity, managerOnly: true },
+      { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3, managerOnly: true },
     ],
   },
   {
@@ -41,10 +46,10 @@ const sections: NavSection[] = [
     items: [
       { label: "Clients", href: "/dashboard/clients", icon: Users },
       { label: "Projects", href: "/dashboard/projects", icon: FolderKanban },
-      { label: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, count: 5 },
+      { label: "Tasks", href: "/dashboard/tasks", icon: CheckSquare },
       { label: "Time", href: "/dashboard/time", icon: Timer },
-      { label: "Invoices", href: "/dashboard/invoices", icon: FileText, count: 7 },
-      { label: "Team", href: "/dashboard/team", icon: UsersRound },
+      { label: "Invoices", href: "/dashboard/invoices", icon: FileText, managerOnly: true },
+      { label: "Team", href: "/dashboard/team", icon: UsersRound, managerOnly: true },
     ],
   },
 ];
@@ -63,14 +68,12 @@ export function SidebarContent({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const isMember = user.role === "member";
 
   return (
     <div className="flex h-full flex-col">
       <div className="p-3">
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface-2 p-2 text-left transition-colors hover:bg-surface-3"
-        >
+        <div className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface-2 p-2">
           <BrandTile className="h-9 w-9" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium text-foreground">
@@ -80,12 +83,16 @@ export function SidebarContent({
               {roleLabels[user.role]}
             </span>
           </span>
-          <ChevronsUpDown aria-hidden className="h-4 w-4 shrink-0 text-faint" />
-        </button>
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2">
-        {sections.map((section, sectionIndex) => (
+        {sections.map((section, sectionIndex) => {
+          const items = section.items.filter(
+            (item) => !isMember || !item.managerOnly,
+          );
+          if (items.length === 0) return null;
+          return (
           <div
             key={section.label ?? `section-${sectionIndex}`}
             className={cn(sectionIndex > 0 && "mt-6")}
@@ -96,7 +103,7 @@ export function SidebarContent({
               </p>
             ) : null}
             <ul className="space-y-0.5">
-              {section.items.map((item) => {
+              {items.map((item) => {
                 const active =
                   item.href === "/dashboard"
                     ? pathname === "/dashboard"
@@ -133,7 +140,8 @@ export function SidebarContent({
               })}
             </ul>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="border-t border-line p-3">

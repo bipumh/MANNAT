@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { Select } from "@/components/ui/field";
@@ -39,6 +40,7 @@ export function TaskDetail({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(false);
 
   const isCompleted = task.status === "completed";
   const clientLabel = task.clientCompany
@@ -56,11 +58,15 @@ export function TaskDetail({
     router.refresh();
   }
 
-  async function archive() {
-    if (!window.confirm(`Archive "${task.title}"?`)) return;
+  function archive() {
+    setConfirm(true);
+  }
+
+  async function confirmArchive() {
     setBusy(true);
     await archiveTaskAction(task.id);
     setBusy(false);
+    setConfirm(false);
     router.refresh();
   }
 
@@ -206,6 +212,17 @@ export function TaskDetail({
             setEditing(false);
             router.refresh();
           }}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Archive task"
+          description={`Archive "${task.title}"? It will be hidden from your task list.`}
+          confirmLabel="Archive"
+          pending={busy}
+          onConfirm={confirmArchive}
+          onClose={() => setConfirm(false)}
         />
       ) : null}
     </div>

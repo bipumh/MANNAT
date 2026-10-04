@@ -35,6 +35,17 @@ export default function AuthLayout({
         <header className="relative flex h-16 items-center px-5 sm:px-8 lg:hidden">
           <Logo />
         </header>
+
+        <div className="relative mt-1 px-6 text-center lg:hidden">
+          <p className="mx-auto max-w-xs font-display text-lg font-medium leading-snug text-foreground">
+            Because spreadsheets have feelings too. 🥹
+          </p>
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-muted">
+            Give your clients, projects, tasks, and invoices a better place to
+            live. ✨
+          </p>
+        </div>
+
         <main className="relative flex flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-12">
           {children}
         </main>

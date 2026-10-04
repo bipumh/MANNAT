@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import { getInvoice, getInvoiceItems } from "@/lib/invoices/queries";
 import { listClients } from "@/lib/clients/queries";
 import { listProjects } from "@/lib/projects/queries";
@@ -18,6 +19,7 @@ export default async function InvoiceDetailPage({
 }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (!canManage(user)) redirect("/dashboard/my-work");
 
   const { id } = await params;
   const invoice = await getInvoice(user.workspaceId, id);

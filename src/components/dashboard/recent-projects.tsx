@@ -44,6 +44,12 @@ export function RecentProjects({
               project.totalTasks > 0
                 ? Math.round((project.completedTasks / project.totalTasks) * 100)
                 : 0;
+            const initials = (() => {
+              const parts = project.name.trim().split(/\s+/).filter(Boolean);
+              if (parts.length === 0) return "?";
+              if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+              return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            })();
             return (
               <li
                 key={project.id}
@@ -52,7 +58,7 @@ export function RecentProjects({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-surface-3 text-xs font-semibold uppercase text-muted">
-                      {project.name.charAt(0)}
+                      {initials}
                     </span>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">

@@ -132,10 +132,12 @@ export function ProjectDetail({
               </div>
             </div>
           </div>
-          <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden className="h-4 w-4" />
-            Edit
-          </Button>
+          {canManage ? (
+            <Button size="sm" variant="surface" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="h-4 w-4" />
+              Edit
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -188,10 +190,12 @@ export function ProjectDetail({
                 View all
                 <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
               </Link>
-              <Button size="sm" onClick={() => setNewTask(true)}>
-                <Plus aria-hidden className="h-4 w-4" />
-                New task
-              </Button>
+              {canManage ? (
+                <Button size="sm" onClick={() => setNewTask(true)}>
+                  <Plus aria-hidden className="h-4 w-4" />
+                  New task
+                </Button>
+              ) : null}
             </div>
           }
         />
@@ -248,10 +252,11 @@ export function ProjectDetail({
         )}
       </Panel>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
-          <PanelHeader
-            title="Invoices"
+      {canManage ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
+            <PanelHeader
+              title="Invoices"
             action={
               <div className="flex items-center gap-3">
                 <Link
@@ -377,6 +382,7 @@ export function ProjectDetail({
           )}
         </Panel>
       </div>
+      ) : null}
 
       <Panel spotlight spotlightColor={SPOTLIGHT_NEUTRAL}>
         <PanelHeader title="Work history" description="What the team has done on this project" />

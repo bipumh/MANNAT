@@ -21,12 +21,15 @@ export default async function TaskDetailPage({
   if (!user) redirect("/login");
 
   const { id } = await params;
-  const task = await getTask(user.workspaceId, id);
+  const manager = canManage(user);
+  const memberUserId = manager ? undefined : user.id;
+
+  const task = await getTask(user.workspaceId, id, memberUserId);
   if (!task) notFound();
 
   const [projects, members] = await Promise.all([
-    listProjects(user.workspaceId),
-    listWorkspaceMembers(user.workspaceId),
+    listProjects(user.workspaceId, { memberUserId }),
+    manager ? listWorkspaceMembers(user.workspaceId) : Promise.resolve([]),
   ]);
 
   return (
@@ -34,7 +37,7 @@ export default async function TaskDetailPage({
       task={task}
       projects={projects}
       members={members}
-      canManage={canManage(user)}
+      canManage={manager}
     />
   );
 }

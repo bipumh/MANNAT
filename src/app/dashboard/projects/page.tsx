@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import { listProjects } from "@/lib/projects/queries";
 import { listClients } from "@/lib/clients/queries";
 import { ProjectsView } from "@/components/projects/projects-view";
@@ -33,9 +34,11 @@ export default async function ProjectsPage({
       ? sp.priority
       : undefined;
 
+  const memberUserId = canManage(user) ? undefined : user.id;
+
   const [projects, clients] = await Promise.all([
-    listProjects(user.workspaceId, { q, status, priority }),
-    listClients(user.workspaceId),
+    listProjects(user.workspaceId, { q, status, priority, memberUserId }),
+    listClients(user.workspaceId, { memberUserId }),
   ]);
 
   return (
@@ -45,6 +48,7 @@ export default async function ProjectsPage({
       query={q}
       status={status}
       priority={priority}
+      canManage={canManage(user)}
     />
   );
 }

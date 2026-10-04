@@ -30,6 +30,12 @@ supabase/.temp/
 # vercel
 .vercel
 
+# local recovery code (sensitive — never commit)
+vercel/recovery code/
+
+# backup files
+*.bak
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -19,7 +19,7 @@ export default async function SignupPage({
     <div className="mx-auto w-full max-w-md">
       <div className="text-center">
         <h1 className="font-display text-3xl font-semibold text-foreground">
-          Start your free trial
+          Create your account
         </h1>
         <p className="mt-2 text-sm text-muted">
           Create a MANNAT account and set up your workspace.

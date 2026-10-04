@@ -49,15 +49,18 @@ export function TasksOverview({
               key={task.id}
               className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-surface-2"
             >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
+              <Link
+                href={`/dashboard/tasks/${task.id}`}
+                className="min-w-0 flex-1"
+              >
+                <p className="truncate text-sm font-medium text-foreground transition-colors hover:text-primary-bright">
                   {task.title}
                 </p>
                 <p className="truncate text-xs text-dim">
                   {task.projectName ?? "No project"}
                   {task.dueDate ? ` · Due ${formatDateShort(task.dueDate)}` : ""}
                 </p>
-              </div>
+              </Link>
               <TaskStatusBadge status={task.status} />
               <TaskPriorityBadge priority={task.priority} />
             </li>

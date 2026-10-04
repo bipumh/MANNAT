@@ -1,13 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Menu, Search } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
+import { Menu } from "lucide-react";
+import { AccountMenu } from "@/components/dashboard/account-menu";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import type { Notification, SessionUser } from "@/types";
 
 function pageTitle(pathname: string): string {
   if (pathname === "/dashboard") return "Overview";
+  if (pathname.startsWith("/dashboard/my-work")) return "My Work";
   if (pathname.startsWith("/dashboard/clients")) return "Clients";
   if (pathname.startsWith("/dashboard/projects")) return "Projects";
   if (pathname.startsWith("/dashboard/tasks")) return "Tasks";
@@ -59,29 +60,12 @@ export function Topbar({
       </div>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
-        <div className="hidden items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 md:flex">
-          <Search aria-hidden className="h-4 w-4 text-faint" />
-          <input
-            type="search"
-            placeholder="Search…"
-            aria-label="Search"
-            className="w-44 bg-transparent text-sm text-foreground placeholder:text-faint focus:outline-none"
-          />
-          <kbd className="rounded border border-line-strong bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-faint">
-            ⌘K
-          </kbd>
-        </div>
-
         <NotificationBell
           notifications={notifications}
           unreadCount={unreadCount}
         />
 
-        <Avatar
-          initials={user.initials}
-          tone="primary"
-          className="h-9 w-9 text-sm"
-        />
+        <AccountMenu user={user} />
       </div>
     </header>
   );

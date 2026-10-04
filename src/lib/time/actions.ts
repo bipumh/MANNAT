@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
 import { canManage } from "@/lib/auth/roles";
+import { isMemberAssignedToProject, isMemberAssignedToTask } from "@/lib/auth/scope";
 import { formatDuration } from "@/lib/format";
 
 export type TimeEntryFormState = {
@@ -122,6 +123,21 @@ export async function createTimeEntryAction(
     return { error: "Selected task not found." };
   }
 
+  if (
+    input.taskId &&
+    !canManage(user) &&
+    !(await isMemberAssignedToTask(user.workspaceId, user.id, input.taskId))
+  ) {
+    return { error: "You can only log time against tasks you're assigned to." };
+  }
+
+  if (
+    !canManage(user) &&
+    !(await isMemberAssignedToProject(user.workspaceId, user.id, input.projectId))
+  ) {
+    return { error: "You can only log time on projects you're assigned to." };
+  }
+
   try {
     const sql = getDb();
     const rows = await sql`
@@ -192,6 +208,32 @@ export async function updateTimeEntryAction(
     !(await taskBelongsToProject(user.workspaceId, input.taskId, input.projectId))
   ) {
     return { error: "Selected task not found." };
+  }
+
+  if (
+    input.taskId &&
+    !canManage(user) &&
+    !(await isMemberAssignedToTask(user.workspaceId, user.id, input.taskId))
+  ) {
+    return { error: "You can only log time against tasks you're assigned to." };
+  }
+
+  if (!canManage(user)) {
+    const sql = getDb();
+    const currentRows = await sql`
+      select project_id from time_entries
+      where workspace_id = ${user.workspaceId} and id = ${id}
+      limit 1
+    `;
+    const currentProjectId = currentRows[0]?.project_id as string | undefined;
+    if (
+      currentProjectId !== input.projectId &&
+      !(await isMemberAssignedToProject(user.workspaceId, user.id, input.projectId))
+    ) {
+      return {
+        error: "You can only move a time entry to a project you're assigned to.",
+      };
+    }
   }
 
   try {

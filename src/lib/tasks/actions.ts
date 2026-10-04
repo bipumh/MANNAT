@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
 import { canManage } from "@/lib/auth/roles";
+import { isMemberAssignedToProject, isMemberAssigneeOfTask } from "@/lib/auth/scope";
 import { notifyUser } from "@/lib/notifications/notify";
 import type { TaskPriority, TaskStatus } from "@/types";
 
@@ -49,6 +50,9 @@ export async function createTaskAction(
 ): Promise<TaskFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "You don't have permission to create tasks." };
+  }
 
   const error = validate(input);
   if (error) return { error };
@@ -103,12 +107,34 @@ export async function updateTaskAction(
 ): Promise<TaskFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (
+    !canManage(user) &&
+    !(await isMemberAssigneeOfTask(user.workspaceId, user.id, id))
+  ) {
+    return { error: "You can only edit tasks assigned to you." };
+  }
 
   const error = validate(input);
   if (error) return { error };
 
   if (!(await projectExistsInWorkspace(user.workspaceId, input.projectId))) {
     return { error: "Selected project not found." };
+  }
+
+  if (!canManage(user)) {
+    const sql = getDb();
+    const currentRows = await sql`
+      select project_id from tasks
+      where workspace_id = ${user.workspaceId} and id = ${id}
+      limit 1
+    `;
+    const currentProjectId = currentRows[0]?.project_id as string | undefined;
+    if (
+      currentProjectId !== input.projectId &&
+      !(await isMemberAssignedToProject(user.workspaceId, user.id, input.projectId))
+    ) {
+      return { error: "You can only move a task to a project you're assigned to." };
+    }
   }
 
   try {
@@ -142,6 +168,12 @@ export async function updateTaskAction(
 export async function completeTaskAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+  if (
+    !canManage(user) &&
+    !(await isMemberAssigneeOfTask(user.workspaceId, user.id, id))
+  ) {
+    return { ok: false };
+  }
 
   try {
     const sql = getDb();
@@ -176,6 +208,12 @@ export async function completeTaskAction(id: string): Promise<{ ok: boolean }> {
 export async function reopenTaskAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+  if (
+    !canManage(user) &&
+    !(await isMemberAssigneeOfTask(user.workspaceId, user.id, id))
+  ) {
+    return { ok: false };
+  }
 
   try {
     const sql = getDb();
@@ -214,6 +252,7 @@ export async function reopenTaskAction(id: string): Promise<{ ok: boolean }> {
 export async function archiveTaskAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+  if (!canManage(user)) return { ok: false };
 
   try {
     const sql = getDb();

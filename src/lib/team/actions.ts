@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
 import { notifyOwnersAndAdmins, notifyUser } from "@/lib/notifications/notify";
+import { sendInvitationEmail } from "@/lib/email/invitation";
 import type { SessionUser, TeamRole } from "@/types";
 
 export type TeamActionState = {
@@ -13,6 +14,7 @@ export type TeamActionState = {
   success?: boolean;
   token?: string;
   inviteUrl?: string;
+  emailSent?: boolean;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -92,6 +94,23 @@ export async function inviteMemberAction(input: {
     return { error: "Could not create the invitation. Please try again." };
   }
 
+  // Send the invitation email when configured. Best-effort and optional: the
+  // invitation record and shareable link already exist, so a missing config or
+  // delivery failure must never fail the invitation itself.
+  let emailSent = false;
+  try {
+    const result = await sendInvitationEmail({
+      to: email,
+      inviterName: user.fullName,
+      workspaceName: user.workspaceName,
+      token,
+      expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+    });
+    emailSent = result.sent;
+  } catch (err) {
+    console.error("[mannat] invitation email failed:", err);
+  }
+
   await logActivity({
     workspaceId: user.workspaceId,
     actorUserId: user.id,
@@ -118,7 +137,7 @@ export async function inviteMemberAction(input: {
   }
 
   revalidatePath("/dashboard/team");
-  return { success: true, token, inviteUrl };
+  return { success: true, token, inviteUrl, emailSent };
 }
 
 export async function acceptInvitationAction(
@@ -161,6 +180,13 @@ export async function acceptInvitationAction(
     update team_invitations
     set accepted_at = now()
     where token = ${token} and accepted_at is null
+  `;
+
+  // Switch the member's active workspace to the one they just joined.
+  await sql`
+    update profiles
+    set active_workspace_id = ${invitation.workspace_id}
+    where id = ${user.id}
   `;
 
   await logActivity({

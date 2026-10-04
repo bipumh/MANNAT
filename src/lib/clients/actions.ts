@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity/log";
+import { canManage } from "@/lib/auth/roles";
 import type { ClientStatus } from "@/types";
 
 export type ClientFormState = {
@@ -38,6 +39,9 @@ export async function createClientAction(
 ): Promise<ClientFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "You don't have permission to create clients." };
+  }
 
   const name = input.name.trim();
   if (!name) return { error: "Client name is required." };
@@ -85,6 +89,9 @@ export async function updateClientAction(
 ): Promise<ClientFormState> {
   const user = await getSessionUser();
   if (!user) return { error: "You must be signed in." };
+  if (!canManage(user)) {
+    return { error: "You don't have permission to edit clients." };
+  }
 
   const name = input.name.trim();
   if (!name) return { error: "Client name is required." };
@@ -133,6 +140,7 @@ export async function updateClientAction(
 export async function archiveClientAction(id: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
   if (!user) return { ok: false };
+  if (!canManage(user)) return { ok: false };
 
   try {
     const sql = getDb();

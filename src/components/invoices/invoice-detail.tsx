@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Panel, PanelHeader } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge } from "@/components/dashboard/status";
@@ -48,6 +49,7 @@ export function InvoiceDetail({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const status = effectiveStatus(invoice);
   const clientLabel = invoice.clientCompany
@@ -59,6 +61,11 @@ export function InvoiceDetail({
     await action(invoice.id);
     setBusy(false);
     router.refresh();
+  }
+
+  async function confirmCancelInvoice() {
+    await run(cancelInvoiceAction);
+    setConfirmCancel(false);
   }
 
   const totals = [
@@ -130,11 +137,7 @@ export function InvoiceDetail({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  if (window.confirm(`Cancel invoice ${invoice.invoiceNumber}?`)) {
-                    run(cancelInvoiceAction);
-                  }
-                }}
+                onClick={() => setConfirmCancel(true)}
                 disabled={busy}
               >
                 <Trash2 aria-hidden className="h-4 w-4" />
@@ -264,6 +267,17 @@ export function InvoiceDetail({
             setEditing(false);
             router.refresh();
           }}
+        />
+      ) : null}
+
+      {confirmCancel ? (
+        <ConfirmDialog
+          title="Cancel invoice"
+          description={`Cancel invoice ${invoice.invoiceNumber}? This can't be undone.`}
+          confirmLabel="Cancel invoice"
+          pending={busy}
+          onConfirm={confirmCancelInvoice}
+          onClose={() => setConfirmCancel(false)}
         />
       ) : null}
     </div>

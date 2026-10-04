@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { canManage } from "@/lib/auth/roles";
 import { listClients } from "@/lib/clients/queries";
 import { ClientsView } from "@/components/clients/clients-view";
 import type { ClientStatus } from "@/types";
@@ -23,7 +24,15 @@ export default async function ClientsPage({
   const status: ClientStatus | undefined =
     sp.status === "active" || sp.status === "inactive" ? sp.status : undefined;
 
-  const clients = await listClients(user.workspaceId, { q, status });
+  const memberUserId = canManage(user) ? undefined : user.id;
+  const clients = await listClients(user.workspaceId, { q, status, memberUserId });
 
-  return <ClientsView clients={clients} query={q} status={status} />;
+  return (
+    <ClientsView
+      clients={clients}
+      query={q}
+      status={status}
+      canManage={canManage(user)}
+    />
+  );
 }

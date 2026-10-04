@@ -1,7 +1,5 @@
 import type {
   ClientStatus,
-  DemoInvoiceStatus,
-  DemoProjectStatus,
   InvoiceStatus,
   ProjectPriority,
   ProjectStatus,
@@ -12,13 +10,6 @@ import type {
 import { Badge } from "@/components/ui/badge";
 
 type BadgeVariant = "neutral" | "success" | "warning" | "danger";
-
-const demoProjectStatus: Record<DemoProjectStatus, { label: string; variant: BadgeVariant }> = {
-  "on-track": { label: "On track", variant: "success" },
-  "at-risk": { label: "At risk", variant: "warning" },
-  completed: { label: "Completed", variant: "neutral" },
-  planned: { label: "Planned", variant: "neutral" },
-};
 
 const projectStatus: Record<ProjectStatus, { label: string; variant: BadgeVariant }> = {
   planned: { label: "Planned", variant: "neutral" },
@@ -31,13 +22,6 @@ const projectPriority: Record<ProjectPriority, { label: string; variant: BadgeVa
   low: { label: "Low", variant: "neutral" },
   medium: { label: "Medium", variant: "warning" },
   high: { label: "High", variant: "danger" },
-};
-
-const demoInvoiceStatus: Record<DemoInvoiceStatus, { label: string; variant: BadgeVariant }> = {
-  paid: { label: "Paid", variant: "success" },
-  pending: { label: "Pending", variant: "warning" },
-  overdue: { label: "Overdue", variant: "danger" },
-  draft: { label: "Draft", variant: "neutral" },
 };
 
 const invoiceStatus: Record<InvoiceStatus, { label: string; variant: BadgeVariant }> = {
@@ -71,15 +55,6 @@ const workspaceRole: Record<WorkspaceRole, { label: string; variant: BadgeVarian
   member: { label: "Member", variant: "neutral" },
 };
 
-export function DemoProjectStatusBadge({ status }: { status: DemoProjectStatus }) {
-  const meta = demoProjectStatus[status];
-  return (
-    <Badge variant={meta.variant} dot>
-      {meta.label}
-    </Badge>
-  );
-}
-
 export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   const meta = projectStatus[status];
   return (
@@ -92,15 +67,6 @@ export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
 export function ProjectPriorityBadge({ priority }: { priority: ProjectPriority }) {
   const meta = projectPriority[priority];
   return <Badge variant={meta.variant}>{meta.label}</Badge>;
-}
-
-export function DemoInvoiceStatusBadge({ status }: { status: DemoInvoiceStatus }) {
-  const meta = demoInvoiceStatus[status];
-  return (
-    <Badge variant={meta.variant} dot>
-      {meta.label}
-    </Badge>
-  );
 }
 
 export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {

@@ -6,6 +6,7 @@ import { Bell, CheckCheck } from "lucide-react";
 import { entityHref } from "@/lib/activity/routes";
 import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import {
   markAllNotificationsReadAction,
   markNotificationReadAction,
@@ -23,6 +24,8 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -90,6 +93,7 @@ export function NotificationBell({
 
       {open ? (
         <div
+          ref={panelRef}
           role="dialog"
           aria-label="Notifications"
           className="fixed inset-x-4 top-16 z-50 mt-2 overflow-hidden rounded-xl border border-line bg-surface shadow-lift sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-96"

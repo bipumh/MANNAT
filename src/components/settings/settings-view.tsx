@@ -36,16 +36,16 @@ export function SettingsView({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
           Settings
-        </h2>
+        </h1>
         <p className="mt-1 text-sm text-muted">
           Manage your profile, workspace and notifications.
         </p>
       </div>
 
       {/* Mobile navigation */}
-      <div className="inline-flex flex-wrap items-center gap-1 rounded-lg border border-line bg-surface p-1 lg:hidden">
+      <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-line bg-surface p-1 lg:hidden">
         {sections.map((section) => {
           const isActive = active === section.id;
           return (
@@ -54,7 +54,7 @@ export function SettingsView({
               type="button"
               onClick={() => setActive(section.id)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-primary text-[#05251c]"
                   : "text-muted hover:text-foreground",

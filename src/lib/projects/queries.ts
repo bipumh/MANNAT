@@ -58,12 +58,14 @@ export async function listProjects(
     q?: string;
     status?: ProjectStatus;
     priority?: ProjectPriority;
+    memberUserId?: string;
   } = {},
 ): Promise<Project[]> {
   const sql = getDb();
   const term = opts.q?.trim() ? `%${opts.q.trim()}%` : null;
   const status = opts.status ?? null;
   const priority = opts.priority ?? null;
+  const memberUserId = opts.memberUserId ?? null;
 
   const rows = (await sql.query(
     `select ${PROJECT_COLUMNS}
@@ -78,20 +80,33 @@ export async function listProjects(
             or p.description ilike $4
             or c.name ilike $4
             or c.company ilike $4)
+       and ($5::text is null or (
+         exists (
+           select 1 from project_members pm
+           where pm.project_id = p.id and pm.user_id = $5
+         )
+         or exists (
+           select 1 from tasks t
+           where t.project_id = p.id and t.assignee_user_id = $5
+         )
+       ))
      order by p.created_at desc`,
-    [workspaceId, status, priority, term],
+    [workspaceId, status, priority, term, memberUserId],
   )) as ProjectRow[];
 
   return rows.map(mapProject);
 }
 
 /**
- * Returns a single project (joined with its client) scoped to the workspace, or
- * `null` when it does not exist or belongs to another workspace.
+ * Returns a single project (joined with its client) scoped to the workspace and,
+ * for a member, restricted to projects they are assigned to. Returns `null` when
+ * it does not exist, belongs to another workspace, or the member is not
+ * authorized to see it.
  */
 export async function getProject(
   workspaceId: string,
   projectId: string,
+  memberUserId?: string,
 ): Promise<Project | null> {
   const sql = getDb();
 
@@ -100,8 +115,18 @@ export async function getProject(
      from projects p
      join clients c on c.id = p.client_id
      where p.workspace_id = $1 and p.id = $2
+       and ($3::text is null or (
+         exists (
+           select 1 from project_members pm
+           where pm.project_id = p.id and pm.user_id = $3
+         )
+         or exists (
+           select 1 from tasks t
+           where t.project_id = p.id and t.assignee_user_id = $3
+         )
+       ))
      limit 1`,
-    [workspaceId, projectId],
+    [workspaceId, projectId, memberUserId ?? null],
   )) as ProjectRow[];
 
   return rows[0] ? mapProject(rows[0]) : null;

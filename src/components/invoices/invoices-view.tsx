@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Toast } from "@/components/ui/toast";
 import { Panel } from "@/components/dashboard/panel";
 import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge } from "@/components/dashboard/status";
@@ -58,6 +60,7 @@ export function InvoicesView({
   });
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<Invoice | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -93,11 +96,16 @@ export function InvoicesView({
     router.refresh();
   }
 
-  async function cancel(invoice: Invoice) {
-    if (!window.confirm(`Cancel invoice ${invoice.invoiceNumber}?`)) return;
-    setBusyId(invoice.id);
-    await cancelInvoiceAction(invoice.id);
+  function cancel(invoice: Invoice) {
+    setConfirm(invoice);
+  }
+
+  async function confirmCancel() {
+    if (!confirm) return;
+    setBusyId(confirm.id);
+    await cancelInvoiceAction(confirm.id);
     setBusyId(null);
+    setConfirm(null);
     setNotice("Invoice cancelled");
     router.refresh();
   }
@@ -162,7 +170,7 @@ export function InvoicesView({
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search invoices, clients or projects…"
             aria-label="Search invoices"
-            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none"
+            className="h-10 w-full rounded-lg border border-line-strong bg-surface pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </div>
 
@@ -191,7 +199,7 @@ export function InvoicesView({
             aria-label="Filter by client"
             value={clientId ?? ""}
             onChange={(event) => navigate("client", event.target.value)}
-            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="">All clients</option>
             {clients.map((client) => (
@@ -205,7 +213,7 @@ export function InvoicesView({
             aria-label="Filter by project"
             value={projectId ?? ""}
             onChange={(event) => navigate("project", event.target.value)}
-            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="h-10 cursor-pointer rounded-lg border border-line-strong bg-surface px-3 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="">All projects</option>
             {projects.map((project) => (
@@ -217,11 +225,7 @@ export function InvoicesView({
         </div>
       </div>
 
-      {notice ? (
-        <p className="text-sm text-primary-bright" role="status">
-          {notice}
-        </p>
-      ) : null}
+      <Toast message={notice} />
 
       {clients.length === 0 ? (
         <EmptyState
@@ -320,7 +324,7 @@ export function InvoicesView({
                         <InvoiceStatusBadge status={status} />
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -413,6 +417,17 @@ export function InvoicesView({
           projects={projects}
           onClose={() => setDialog({ open: false, invoice: null })}
           onSaved={onSaved}
+        />
+      ) : null}
+
+      {confirm ? (
+        <ConfirmDialog
+          title="Cancel invoice"
+          description={`Cancel invoice ${confirm.invoiceNumber}? It will be marked as cancelled and can't be reopened.`}
+          confirmLabel="Cancel invoice"
+          pending={busyId === confirm.id}
+          onConfirm={confirmCancel}
+          onClose={() => setConfirm(null)}
         />
       ) : null}
     </div>
