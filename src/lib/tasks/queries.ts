@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
+import { toDateOnlyString } from "@/lib/format";
 import type { Task, TaskPriority, TaskStatus } from "@/types";
 
 type TaskRow = {
@@ -33,7 +34,7 @@ function mapTask(row: TaskRow): Task {
     description: row.description,
     status: row.status,
     priority: row.priority,
-    dueDate: row.due_date,
+    dueDate: toDateOnlyString(row.due_date),
     completedAt: row.completed_at,
     archived: row.archived,
     createdAt: row.created_at,

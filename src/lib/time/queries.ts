@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
+import { toDateOnlyString } from "@/lib/format";
 import type { TimeEntry } from "@/types";
 
 type TimeEntryRow = {
@@ -31,7 +32,7 @@ function mapTimeEntry(row: TimeEntryRow): TimeEntry {
     projectId: row.project_id,
     taskId: row.task_id ?? null,
     description: row.description ?? null,
-    date: row.date,
+    date: toDateOnlyString(row.date) ?? "",
     durationMinutes: row.duration_minutes,
     billable: row.billable,
     hourlyRate: row.hourly_rate ?? null,

@@ -65,28 +65,52 @@ export function formatDateShort(iso: string): string {
   }).format(new Date(iso));
 }
 
+const MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 /**
- * Formats a PostgreSQL `date` value ("YYYY-MM-DD") as a calendar date without
- * any timezone conversion. `new Date("YYYY-MM-DD")` parses as UTC midnight,
- * which makes plain dates display one day earlier in timezones west of UTC; by
- * appending an explicit UTC time and forcing the `UTC` timezone we keep the
- * calendar date identical everywhere.
+ * Normalizes a PostgreSQL `date` value to a plain "YYYY-MM-DD" string with no
+ * timezone ambiguity. The Neon driver returns `date` columns as JS `Date`
+ * objects at local midnight, so we read the local year/month/day components
+ * (which are the true calendar date) rather than the UTC components, which can
+ * be shifted by a day depending on the runtime timezone. String inputs are
+ * parsed directly so "YYYY-MM-DD" is preserved verbatim.
  */
-export function formatDateOnly(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${iso}T00:00:00Z`));
+export function toDateOnlyString(value: unknown): string | null {
+  if (value == null) return null;
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, "0");
+    const d = String(value.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  const s = String(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+  const parsed = new Date(s);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const y = parsed.getFullYear();
+  const m = String(parsed.getMonth() + 1).padStart(2, "0");
+  const d = String(parsed.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-export function formatDateOnlyShort(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${iso}T00:00:00Z`));
+function formatDateOnlyParts(value: string | Date, withYear: boolean): string {
+  const s = toDateOnlyString(value);
+  if (!s) return "";
+  const [y, m, d] = s.split("-").map(Number);
+  return withYear ? `${MONTHS_SHORT[m - 1]} ${d}, ${y}` : `${MONTHS_SHORT[m - 1]} ${d}`;
+}
+
+export function formatDateOnly(iso: string | Date): string {
+  return formatDateOnlyParts(iso, true);
+}
+
+export function formatDateOnlyShort(iso: string | Date): string {
+  return formatDateOnlyParts(iso, false);
 }
 
 export function formatRelativeDate(iso: string): string {

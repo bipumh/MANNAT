@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
+import { toDateOnlyString } from "@/lib/format";
 import type { WorkLog } from "@/types";
 
 type WorkLogRow = {
@@ -32,7 +33,7 @@ function mapWorkLog(row: WorkLogRow): WorkLog {
     projectId: row.project_id,
     taskId: row.task_id ?? null,
     userId: row.user_id,
-    workDate: row.work_date,
+    workDate: toDateOnlyString(row.work_date) ?? "",
     description: row.description,
     durationMinutes: row.duration_minutes,
     billable: row.billable,

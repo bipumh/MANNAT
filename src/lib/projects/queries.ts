@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
+import { toDateOnlyString } from "@/lib/format";
 import type { Project, ProjectPriority, ProjectStatus } from "@/types";
 
 type ProjectRow = {
@@ -30,8 +31,8 @@ function mapProject(row: ProjectRow): Project {
     description: row.description,
     status: row.status,
     priority: row.priority,
-    startDate: row.start_date,
-    dueDate: row.due_date,
+    startDate: toDateOnlyString(row.start_date),
+    dueDate: toDateOnlyString(row.due_date),
     budget: row.budget,
     archived: row.archived,
     createdAt: row.created_at,

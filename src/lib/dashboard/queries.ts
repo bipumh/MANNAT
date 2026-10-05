@@ -2,7 +2,7 @@ import "server-only";
 
 import { getDb } from "@/lib/db";
 import { getRecentActivity } from "@/lib/activity/queries";
-import { formatCurrencyPrecise, formatDuration } from "@/lib/format";
+import { formatCurrencyPrecise, formatDuration, toDateOnlyString } from "@/lib/format";
 import type {
   ActivityEvent,
   InvoiceStatus,
@@ -184,7 +184,7 @@ export async function getDashboardProjects(
     clientName: row.client_name ?? null,
     status: row.status,
     priority: row.priority,
-    dueDate: row.due_date ?? null,
+    dueDate: toDateOnlyString(row.due_date),
     totalTasks: Number(row.total_tasks),
     completedTasks: Number(row.completed_tasks),
   }));
@@ -241,7 +241,7 @@ export async function getDashboardTasks(
       title: row.title,
       projectName: row.project_name ?? null,
       priority: row.priority,
-      dueDate: row.due_date ?? null,
+      dueDate: toDateOnlyString(row.due_date),
       status: row.status,
     })),
     needsAttention: Number(attentionRows[0]?.count ?? 0),
@@ -303,8 +303,8 @@ export async function getDashboardInvoices(
       clientName: row.client_name ?? null,
       total: row.total,
       status: row.status,
-      issueDate: row.issue_date,
-      dueDate: row.due_date ?? null,
+      issueDate: toDateOnlyString(row.issue_date) ?? "",
+      dueDate: toDateOnlyString(row.due_date),
     })),
     counts,
   };
@@ -327,10 +327,12 @@ export type PulseItem = {
   href: string;
 };
 
-function daysUntil(iso: string): number {
+function daysUntil(iso: string | Date): number {
+  const dateStr = toDateOnlyString(iso);
+  if (!dateStr) return 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const due = new Date(`${iso}T00:00:00`);
+  const due = new Date(`${dateStr}T00:00:00`);
   return Math.round((due.getTime() - today.getTime()) / 86400000);
 }
 

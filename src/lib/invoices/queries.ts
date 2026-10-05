@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
+import { toDateOnlyString } from "@/lib/format";
 import type { Invoice, InvoiceItem, InvoiceStatus } from "@/types";
 
 type InvoiceRow = {
@@ -32,8 +33,8 @@ function mapInvoice(row: InvoiceRow): Invoice {
     projectId: row.project_id ?? null,
     invoiceNumber: row.invoice_number,
     status: row.status,
-    issueDate: row.issue_date,
-    dueDate: row.due_date ?? null,
+    issueDate: toDateOnlyString(row.issue_date) ?? "",
+    dueDate: toDateOnlyString(row.due_date),
     subtotal: row.subtotal,
     tax: row.tax,
     total: row.total,
