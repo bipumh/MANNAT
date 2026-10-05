@@ -5,7 +5,7 @@ import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { InvoiceStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardInvoice, InvoiceCounts } from "@/lib/dashboard/queries";
-import { formatCurrencyPrecise, formatDateShort } from "@/lib/format";
+import { formatCurrencyPrecise, formatDateOnlyShort } from "@/lib/format";
 
 export function RecentInvoices({
   invoices,
@@ -76,7 +76,7 @@ export function RecentInvoices({
                     {invoice.clientName ?? "No client"}
                   </p>
                   <p className="mt-0.5 text-xs text-dim">
-                    {invoice.invoiceNumber} · {formatDateShort(invoice.issueDate)}
+                    {invoice.invoiceNumber} · {formatDateOnlyShort(invoice.issueDate)}
                   </p>
                 </div>
               </div>

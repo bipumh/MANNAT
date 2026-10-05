@@ -13,7 +13,7 @@ import { TimeDialog } from "@/components/time/time-dialog";
 import { deleteTimeEntryAction } from "@/lib/time/actions";
 import {
   formatCurrencyPrecise,
-  formatDate,
+  formatDateOnly,
   formatDuration,
 } from "@/lib/format";
 import type { Project, Task, TimeEntry } from "@/types";
@@ -75,7 +75,7 @@ export function TimeDetail({
             </Link>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                {formatDate(entry.date)}
+                {formatDateOnly(entry.date)}
               </h1>
               {entry.billable ? (
                 <Badge variant="success">Billable</Badge>

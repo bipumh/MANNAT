@@ -22,7 +22,7 @@ import { ProjectTeam } from "@/components/projects/project-team";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
 import { WorkHistory } from "@/components/work-log/work-history";
-import { formatBudget, formatCurrencyPrecise, formatDate, formatDateShort, formatDuration } from "@/lib/format";
+import { formatBudget, formatCurrencyPrecise, formatDate, formatDateOnly, formatDateOnlyShort, formatDuration } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Client, Invoice, Project, Task, WorkLog, WorkspaceMember } from "@/types";
 import type { ProjectFinancialStatus, ProjectProfitability } from "@/lib/projects/profitability";
@@ -77,8 +77,8 @@ export function ProjectDetail({
     : project.clientName;
 
   const overview = [
-    { label: "Start date", value: project.startDate ? formatDate(project.startDate) : "—" },
-    { label: "Due date", value: project.dueDate ? formatDate(project.dueDate) : "—" },
+    { label: "Start date", value: project.startDate ? formatDateOnly(project.startDate) : "—" },
+    { label: "Due date", value: project.dueDate ? formatDateOnly(project.dueDate) : "—" },
     { label: "Budget", value: formatBudget(project.budget) },
     { label: "Created", value: formatDate(project.createdAt) },
   ];
@@ -240,7 +240,7 @@ export function ProjectDetail({
                     </p>
                     {task.dueDate ? (
                       <p className="text-xs text-dim">
-                        Due {formatDateShort(task.dueDate)}
+                        Due {formatDateOnlyShort(task.dueDate)}
                       </p>
                     ) : null}
                   </Link>
@@ -296,7 +296,7 @@ export function ProjectDetail({
                     </p>
                     {invoice.dueDate ? (
                       <p className="text-xs text-dim">
-                        Due {formatDateShort(invoice.dueDate)}
+                        Due {formatDateOnlyShort(invoice.dueDate)}
                       </p>
                     ) : null}
                   </Link>

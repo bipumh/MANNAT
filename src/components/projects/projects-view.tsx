@@ -14,7 +14,7 @@ import { ProjectPriorityBadge, ProjectStatusBadge } from "@/components/dashboard
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectDialog } from "@/components/projects/project-dialog";
 import { archiveProjectAction } from "@/lib/projects/actions";
-import { formatBudget, formatDate, formatDateShort } from "@/lib/format";
+import { formatBudget, formatDate, formatDateOnlyShort } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Client, Project, ProjectPriority, ProjectStatus } from "@/types";
 
@@ -302,7 +302,7 @@ export function ProjectsView({
                     </td>
                     <td className="px-4 py-3.5 text-muted">
                       {project.dueDate
-                        ? formatDateShort(project.dueDate)
+                        ? formatDateOnlyShort(project.dueDate)
                         : "—"}
                     </td>
                     <td className="px-4 py-3.5 text-muted">
@@ -371,7 +371,7 @@ export function ProjectsView({
                   <ProjectPriorityBadge priority={project.priority} />
                   {project.dueDate ? (
                     <span className="text-xs text-dim">
-                      Due {formatDateShort(project.dueDate)}
+                      Due {formatDateOnlyShort(project.dueDate)}
                     </span>
                   ) : null}
                   {project.budget ? (

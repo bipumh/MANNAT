@@ -8,7 +8,7 @@ import {
 } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardProject } from "@/lib/dashboard/queries";
-import { formatDateShort } from "@/lib/format";
+import { formatDateOnlyShort } from "@/lib/format";
 
 export function RecentProjects({
   projects,
@@ -67,7 +67,7 @@ export function RecentProjects({
                       <p className="mt-0.5 text-xs text-dim">
                         {project.clientName ?? "No client"}
                         {project.dueDate
-                          ? ` · Due ${formatDateShort(project.dueDate)}`
+                          ? ` · Due ${formatDateOnlyShort(project.dueDate)}`
                           : ""}
                       </p>
                     </div>

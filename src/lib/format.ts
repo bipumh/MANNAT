@@ -65,6 +65,30 @@ export function formatDateShort(iso: string): string {
   }).format(new Date(iso));
 }
 
+/**
+ * Formats a PostgreSQL `date` value ("YYYY-MM-DD") as a calendar date without
+ * any timezone conversion. `new Date("YYYY-MM-DD")` parses as UTC midnight,
+ * which makes plain dates display one day earlier in timezones west of UTC; by
+ * appending an explicit UTC time and forcing the `UTC` timezone we keep the
+ * calendar date identical everywhere.
+ */
+export function formatDateOnly(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
+
+export function formatDateOnlyShort(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
+
 export function formatRelativeDate(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const minutes = Math.round(diff / 60000);

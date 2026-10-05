@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ClientDialog } from "@/components/clients/client-dialog";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
 import { WorkHistory } from "@/components/work-log/work-history";
-import { formatBudget, formatDate, formatDateShort } from "@/lib/format";
+import { formatBudget, formatDate, formatDateOnlyShort } from "@/lib/format";
 import type { Client, Invoice, Project, WorkLog } from "@/types";
 
 function initials(name: string): string {
@@ -191,7 +191,7 @@ export function ClientDetail({
                     </p>
                     {project.dueDate ? (
                       <p className="text-xs text-dim">
-                        Due {formatDateShort(project.dueDate)}
+                        Due {formatDateOnlyShort(project.dueDate)}
                       </p>
                     ) : null}
                   </Link>
@@ -246,7 +246,7 @@ export function ClientDetail({
                     </p>
                     {invoice.dueDate ? (
                       <p className="text-xs text-dim">
-                        Due {formatDateShort(invoice.dueDate)}
+                        Due {formatDateOnlyShort(invoice.dueDate)}
                       </p>
                     ) : null}
                   </Link>

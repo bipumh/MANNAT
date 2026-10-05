@@ -15,7 +15,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { RecordWorkDialog } from "@/components/work-log/record-work-dialog";
 import { WorkHistory } from "@/components/work-log/work-history";
-import { formatDateShort, formatDuration } from "@/lib/format";
+import { formatDateOnlyShort, formatDuration } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { MyWorkData } from "@/lib/my-work/queries";
 import type { Client, Project, Task } from "@/types";
@@ -225,7 +225,7 @@ export function MyWorkView({
                       </p>
                       <p className="truncate text-xs text-dim">
                         {task.projectName ?? "No project"}
-                        {task.dueDate ? ` · Due ${formatDateShort(task.dueDate)}` : ""}
+                        {task.dueDate ? ` · Due ${formatDateOnlyShort(task.dueDate)}` : ""}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -284,7 +284,7 @@ export function MyWorkView({
                       {entry.projectName ?? "Project"}
                     </p>
                     <p className="truncate text-xs text-dim">
-                      {formatDateShort(entry.date)}
+                      {formatDateOnlyShort(entry.date)}
                       {entry.taskTitle ? ` · ${entry.taskTitle}` : ""}
                     </p>
                   </div>

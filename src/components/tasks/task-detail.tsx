@@ -23,7 +23,7 @@ import {
   completeTaskAction,
   reopenTaskAction,
 } from "@/lib/tasks/actions";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateOnly } from "@/lib/format";
 import type { Project, Task, WorkspaceMember } from "@/types";
 
 export function TaskDetail({
@@ -81,7 +81,7 @@ export function TaskDetail({
   }
 
   const facts = [
-    { label: "Due date", value: task.dueDate ? formatDate(task.dueDate) : "—" },
+    { label: "Due date", value: task.dueDate ? formatDateOnly(task.dueDate) : "—" },
     { label: "Created", value: formatDate(task.createdAt) },
     ...(task.completedAt
       ? [{ label: "Completed", value: formatDate(task.completedAt) }]

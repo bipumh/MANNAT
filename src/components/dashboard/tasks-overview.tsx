@@ -5,7 +5,7 @@ import { SPOTLIGHT_NEUTRAL } from "@/components/dashboard/spotlight";
 import { TaskPriorityBadge, TaskStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardTask } from "@/lib/dashboard/queries";
-import { formatDateShort } from "@/lib/format";
+import { formatDateOnlyShort } from "@/lib/format";
 
 export function TasksOverview({
   tasks,
@@ -58,7 +58,7 @@ export function TasksOverview({
                 </p>
                 <p className="truncate text-xs text-dim">
                   {task.projectName ?? "No project"}
-                  {task.dueDate ? ` · Due ${formatDateShort(task.dueDate)}` : ""}
+                  {task.dueDate ? ` · Due ${formatDateOnlyShort(task.dueDate)}` : ""}
                 </p>
               </Link>
               <TaskStatusBadge status={task.status} />

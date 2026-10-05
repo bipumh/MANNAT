@@ -17,7 +17,7 @@ import {
   completeTaskAction,
   reopenTaskAction,
 } from "@/lib/tasks/actions";
-import { formatDateShort } from "@/lib/format";
+import { formatDateOnlyShort } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Project, Task, TaskPriority, TaskStatus } from "@/types";
 
@@ -41,18 +41,18 @@ function dueMeta(
 ): { label: string; className: string } | null {
   if (!dueDate) return null;
   if (status === "completed") {
-    return { label: formatDateShort(dueDate), className: "text-dim" };
+    return { label: formatDateOnlyShort(dueDate), className: "text-dim" };
   }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const due = new Date(`${dueDate}T00:00:00`);
   const days = Math.round((due.getTime() - today.getTime()) / 86400000);
   if (days < 0) {
-    return { label: `Overdue · ${formatDateShort(dueDate)}`, className: "text-red-300" };
+    return { label: `Overdue · ${formatDateOnlyShort(dueDate)}`, className: "text-red-300" };
   }
   if (days === 0) return { label: "Due today", className: "text-amber-300" };
   if (days === 1) return { label: "Due tomorrow", className: "text-amber-300" };
-  return { label: formatDateShort(dueDate), className: "text-muted" };
+  return { label: formatDateOnlyShort(dueDate), className: "text-muted" };
 }
 
 export function TasksView({

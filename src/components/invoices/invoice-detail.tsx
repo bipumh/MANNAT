@@ -23,7 +23,7 @@ import {
   markInvoicePaidAction,
   markInvoiceSentAction,
 } from "@/lib/invoices/actions";
-import { formatBudget, formatDate, formatDuration } from "@/lib/format";
+import { formatBudget, formatDateOnly, formatDuration } from "@/lib/format";
 import type { Client, Invoice, InvoiceItem, InvoiceStatus, Project } from "@/types";
 
 function effectiveStatus(invoice: Invoice): InvoiceStatus {
@@ -184,7 +184,7 @@ export function InvoiceDetail({
             <div className="flex items-center justify-between">
               <span className="text-muted">Issued</span>
               <span className="font-medium text-foreground">
-                {formatDate(invoice.issueDate)}
+                {formatDateOnly(invoice.issueDate)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -196,7 +196,7 @@ export function InvoiceDetail({
                     : "font-medium text-foreground"
                 }
               >
-                {invoice.dueDate ? formatDate(invoice.dueDate) : "—"}
+                {invoice.dueDate ? formatDateOnly(invoice.dueDate) : "—"}
               </span>
             </div>
           </div>

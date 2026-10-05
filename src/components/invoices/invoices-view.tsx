@@ -13,7 +13,7 @@ import { InvoiceStatusBadge } from "@/components/dashboard/status";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
 import { cancelInvoiceAction } from "@/lib/invoices/actions";
-import { formatBudget, formatDateShort } from "@/lib/format";
+import { formatBudget, formatDateOnlyShort } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Client, Invoice, InvoiceStatus, Project } from "@/types";
 
@@ -305,7 +305,7 @@ export function InvoicesView({
                           : invoice.clientName}
                       </td>
                       <td className="px-4 py-3.5 text-muted">
-                        {formatDateShort(invoice.issueDate)}
+                        {formatDateOnlyShort(invoice.issueDate)}
                       </td>
                       <td
                         className={cn(
@@ -314,7 +314,7 @@ export function InvoicesView({
                         )}
                       >
                         {invoice.dueDate
-                          ? formatDateShort(invoice.dueDate)
+                          ? formatDateOnlyShort(invoice.dueDate)
                           : "—"}
                       </td>
                       <td className="px-4 py-3.5 text-right font-semibold tabular-nums text-foreground">
@@ -381,7 +381,7 @@ export function InvoicesView({
                     <InvoiceStatusBadge status={status} />
                     {invoice.dueDate ? (
                       <span className="text-xs text-dim">
-                        Due {formatDateShort(invoice.dueDate)}
+                        Due {formatDateOnlyShort(invoice.dueDate)}
                       </span>
                     ) : null}
                   </div>

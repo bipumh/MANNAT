@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { formatDateShort, formatDuration } from "@/lib/format";
+import { formatDateOnlyShort, formatDuration } from "@/lib/format";
 import type { WorkLog } from "@/types";
 
 export function WorkHistory({ logs }: { logs: WorkLog[] }) {
@@ -17,7 +17,7 @@ export function WorkHistory({ logs }: { logs: WorkLog[] }) {
           <div className="min-w-0">
             <p className="text-sm text-foreground">
               <span className="font-medium">{log.userName ?? "Someone"}</span>
-              <span className="text-dim"> · {formatDateShort(log.workDate)}</span>
+              <span className="text-dim"> · {formatDateOnlyShort(log.workDate)}</span>
             </p>
             <p className="mt-0.5 text-sm leading-relaxed text-muted">
               {log.description}

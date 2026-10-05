@@ -16,8 +16,8 @@ import { TimeInvoiceDialog } from "@/components/time/time-invoice-dialog";
 import { deleteTimeEntryAction } from "@/lib/time/actions";
 import {
   formatCurrencyPrecise,
-  formatDate,
-  formatDateShort,
+  formatDateOnly,
+  formatDateOnlyShort,
   formatDuration,
 } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -311,7 +311,7 @@ export function TimeView({
                           className="block"
                         >
                           <p className="font-medium text-foreground transition-colors group-hover:text-primary-bright">
-                            {formatDateShort(entry.date)}
+                            {formatDateOnlyShort(entry.date)}
                           </p>
                           {entry.description ? (
                             <p className="max-w-[220px] truncate text-xs text-dim">
@@ -385,7 +385,7 @@ export function TimeView({
                       className="min-w-0"
                     >
                       <p className="font-medium text-foreground">
-                        {formatDateShort(entry.date)}
+                        {formatDateOnlyShort(entry.date)}
                       </p>
                       <p className="truncate text-xs text-dim">
                         {entry.projectName}
@@ -466,7 +466,7 @@ export function TimeView({
       {confirm ? (
         <ConfirmDialog
           title="Delete time entry"
-          description={`Delete this ${formatDate(confirm.date)} entry (${formatDuration(
+          description={`Delete this ${formatDateOnly(confirm.date)} entry (${formatDuration(
             confirm.durationMinutes,
           )})? This can't be undone.`}
           confirmLabel="Delete"
